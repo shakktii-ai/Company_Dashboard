@@ -35,7 +35,7 @@ if (!data.ok) {
       // ✅ Employee / HOD / Leader
       if (data.admin.role !== "admin") {
         if (data.admin.cultureInterviewCompleted) {
-          router.push("/admin"); // interview already done
+          router.push("/admin/employeeDashboard"); // interview already done
         } else {
           router.push("employee/culture-interview"); // interview pending
         }

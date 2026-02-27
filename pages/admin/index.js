@@ -6,6 +6,8 @@ import { MdLogout } from "react-icons/md";
 import CompanyProfileModal from "../../components/CompanyProfileModal";
 import { FiUser } from "react-icons/fi";
 import jsPDF from "jspdf";
+import Link from "next/link";
+import {HiChevronDown } from 'react-icons/hi';
 export default function AdminIndex() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -54,6 +56,7 @@ export default function AdminIndex() {
 const [showProfileMenu, setShowProfileMenu] = useState(false);
  const [selectedInterviewReport, setSelectedInterviewReport] = useState(null);
   const [showInterviewReportModal, setShowInterviewReportModal] = useState(false);
+   const [showEmployeeSub, setShowEmployeeSub] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -502,12 +505,18 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
           <div className="flex items-center gap-3">
 
             <div>
-              <button
+              {/* <button
                 onClick={() => setShowCreate(true)}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700"
               >
                 + Create Interview
-              </button>
+              </button> */}
+              {/* <button
+    onClick={() => router.push("/admin/employees")}
+    className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+  >
+    Employees
+  </button> */}
             </div>
 
 {/* Profile Dropdown */}
@@ -528,25 +537,68 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
       />
 
       {/* dropdown */}
-      <div className="absolute right-0 mt-2 w-40 bg-white rounded-md shadow-lg border z-50">
-        <button
-          onClick={() => {
-            setShowCompanyProfile(true);
-            setShowProfileMenu(false);
-          }}
-          className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-        >
-          Profile
-        </button>
+     
 
-        <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+<div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+
+  {/* Profile */}
+  {/* <button
+    onClick={() => {
+      setShowCompanyProfile(true);
+      setShowProfileMenu(false);
+    }}
+    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+  >
+    Profile
+  </button> */}
+<button
+                onClick={() => setShowCreate(true)}
+                className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                Create Interview
+              </button>
+  {/* Employee with Submenu */}
+  <div className="relative">
+
+    <button
+      onClick={() => setShowEmployeeSub(!showEmployeeSub)}
+      className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+    >
+     Manage Employee
+     <HiChevronDown />
+    </button>
+
+    {showEmployeeSub && (
+      <div className="ml-2 border-l bg-gray-50">
+
+        <Link
+          href="/admin/employees"
+          className="block px-4 py-2 text-sm hover:bg-gray-100"
         >
-          Logout
-        </button>
+          Add Employee
+        </Link>
+
+        <Link
+          href="/admin/employee-assessments"
+          className="block px-4 py-2 text-sm hover:bg-gray-100"
+        >
+          Create Assessment
+        </Link>
+
       </div>
+    )}
+  </div>
+
+  {/* Logout */}
+  <button
+    onClick={handleLogout}
+    disabled={loggingOut}
+    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+  >
+    Logout
+  </button>
+
+</div>
     </>
   )}
 </div>
@@ -583,12 +635,12 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                 <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
                   {roles.map(r => <option key={r} value={r}>{r === "all" ? "All roles" : r}</option>)}
                 </select>
-                <select value={recommendFilter} onChange={(e) => setRecommendFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
+                {/* <select value={recommendFilter} onChange={(e) => setRecommendFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
                   <option value="all">Any recommendation</option>
                   <option value="Proceed">Proceed</option>
                   <option value="Borderline">Borderline</option>
                   <option value="Cannot Proceed">Cannot Proceed</option>
-                </select>
+                </select> */}
 
               </div>
             </div>
@@ -697,11 +749,11 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                   </div>
 
                   {/* small summary badges */}
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  {/* <div className="flex flex-wrap gap-2 mb-4">
                     <div className="px-3 py-1 bg-green-50 text-green-800 rounded-full text-sm">Proceed: {reports.filter(r => r.reportAnalysis?.recommendation === "Proceed").length}</div>
                     <div className="px-3 py-1 bg-yellow-50 text-yellow-800 rounded-full text-sm">Borderline: {reports.filter(r => r.reportAnalysis?.recommendation === "Borderline").length}</div>
                     <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Pending: {reports.filter(r => !r.reportAnalysis).length}</div>
-                  </div>
+                  </div> */}
 
                   {/* reports table (responsive) */}
                   <div className="overflow-x-auto">
@@ -733,12 +785,14 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                             <td className="py-3 pr-4">{new Date(r.createdAt).toLocaleString()}</td>
                             <td className="py-3 pr-4">
                               <div className="flex gap-2">
-                                <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">View</button>
+                                <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
  <button
                                   onClick={() => openInterviewReport(r.email, r.role)}
                                   className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
                                 >
                                   Interview
+
+
                                 </button>
                               </div>
                             </td>
@@ -1009,7 +1063,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                 </div>
 
                 {/* Recommendation Badge */}
-                <div>
+                {/* <div>
                   <span
                     className={`px-4 py-2 rounded-full text-sm font-semibold
               ${selectedReport.reportAnalysis?.recommendation === "Proceed"
@@ -1021,7 +1075,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                   >
                     {selectedReport.reportAnalysis?.recommendation}
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* ================= HIRING VERDICT ================= */}

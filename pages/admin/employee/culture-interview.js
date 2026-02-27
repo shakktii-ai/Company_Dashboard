@@ -276,7 +276,7 @@ export default function CultureInterview() {
         setQuestions(data.questions);
       } catch (err) {
         toast.error("Failed to start interview");
-        router.push("/admin");
+         router.push("/admin/login");
       }
     };
 
@@ -369,14 +369,14 @@ export default function CultureInterview() {
       });
 
       toast.success("Interview Submitted Successfully");
-      router.push("/admin");
+      router.push("/admin/employeeDashboard");
     }
   };
 
   if (!questions.length) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950 text-white">
-        Preparing your interview...
+        Preparing your Cultural interview wait...
       </div>
     );
   }
@@ -437,7 +437,7 @@ export default function CultureInterview() {
             }
             className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center"
           >
-            {status === "listening" ? <IoMdPause /> : <IoMdPlay />}
+            {status === "listening" ? ' Speak' : 'Pause'}
           </button>
 
           <button
