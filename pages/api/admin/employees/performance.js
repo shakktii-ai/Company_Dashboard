@@ -1,5 +1,5 @@
-import dbConnect from "../../../lib/db";
-import Session from "../../../models/EmployeeAssessmentSession";
+import dbConnect from "../../../../lib/db";
+import Session from "../../../../models/EmployeeAssessmentSession";
 import { verifyTokenFromReq } from "../../../lib/verifyToken";
 
 export default async function handler(req, res) {
