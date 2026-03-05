@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { FiLogOut } from "react-icons/fi";
+import { FaEye } from "react-icons/fa";
 import AssessmentsPage from "../../../pages/admin/employeeDashboard/assessments";
+import EmployeeReportModal from '../../../components/EmployeeReportModal';
 import { useRouter } from "next/router";
 export default function EmployeeDashboard() {
     const router=useRouter();
@@ -75,9 +77,9 @@ async function handleLogout() {
           {/* RIGHT NAV */}
           <div className="flex items-center gap-4">
 
-            <span className="text-sm text-gray-600 hidden sm:block">
+            {/* <span className="text-sm text-gray-600 hidden sm:block">
               Role: {user?.role || "Employee"}
-            </span>
+            </span> */}
             <button
           onClick={handleLogout}
           disabled={loggingOut}
@@ -138,33 +140,221 @@ async function handleLogout() {
 /* ================= Report ================= */
 
 function Report() {
+
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedSession, setSelectedSession] = useState(null);
+
+  useEffect(() => {
+    loadReports();
+  }, []);
+
+  async function loadReports() {
+    try {
+      const res = await fetch("/api/admin/employees/reports");
+      const data = await res.json();
+
+      if (data.ok) setReports(data.reports);
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading)
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Loading reports...
+      </div>
+    );
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
-      <h3 className="text-lg font-semibold mb-4">
-        My Reports
-      </h3>
+    <>
+      <div className="bg-white rounded-xl shadow p-6">
 
-    </div>
+        <h3 className="text-lg font-semibold mb-6">
+          My Assessment Reports
+        </h3>
+
+        {reports.length === 0 && (
+          <p className="text-gray-500">
+            No completed assessments yet.
+          </p>
+        )}
+
+        <div className="space-y-4">
+
+          {reports.map((r) => (
+
+            <div
+              key={r.sessionId}
+              className="border rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
+            >
+
+              <div>
+
+                <p className="font-medium">
+                  {r.title}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Role: {r.role}
+                </p>
+
+                <p className="text-sm text-gray-500">
+                  Completed: {new Date(r.completedAt).toLocaleDateString()}
+                </p>
+
+              </div>
+
+              <div className="flex items-center gap-4">
+
+                {/* <span
+                  className={`font-semibold ${
+                    r.finalScore >= 75
+                      ? "text-green-600"
+                      : r.finalScore >= 50
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {r.finalScore}%
+                </span> */}
+
+                <button
+                  onClick={() => setSelectedSession(r.sessionId)}
+                  className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
+                >
+                  <FaEye />
+                  View
+                </button>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </div>
+
+      </div>
+
+
+      {/* MODAL OUTSIDE CONTAINER */}
+
+      {selectedSession && (
+        <EmployeeReportModal
+          sessionId={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
+
+    </>
+
   );
 }
-
 
 
 /* ================= KPI ================= */
 
 function Video() {
+
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadVideos();
+  }, []);
+
+  async function loadVideos() {
+
+    try {
+
+      const res = await fetch("/api/admin/employees/reports");
+      const data = await res.json();
+
+      if (data.ok) {
+        setReports(data.reports);
+      }
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+
+  }
+
+  if (loading)
+    return (
+      <div className="text-center py-10 text-gray-500">
+        Loading videos...
+      </div>
+    );
+
   return (
-    <div className="bg-white rounded-xl shadow p-6">
 
-      <h3 className="text-lg font-semibold mb-4">
-        Video Recommentation
-      </h3>
+    <div className="space-y-6">
 
-      
+      {reports.length === 0 && (
+        <div className="bg-white rounded-xl shadow p-6 text-gray-500">
+          No videos available yet.
+        </div>
+      )}
+
+      {reports.map((r) => (
+
+        <div
+          key={r.sessionId}
+          className="bg-white rounded-xl shadow p-6"
+        >
+
+          {/* HEADER */}
+
+          <div className="mb-4">
+
+            <h3 className="font-semibold text-lg">
+              {r.role}
+            </h3>
+
+            <p className="text-sm text-gray-500">
+              Completed: {new Date(r.completedAt).toLocaleDateString()}
+            </p>
+
+          </div>
+
+
+          {/* VIDEOS */}
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+            {(r.recommendedVideos || []).map((group, gi) =>
+
+              group.videos.map((v, vi) => (
+
+                <VideoCard
+                  key={`${gi}-${vi}`}
+                  title={v.title}
+                  url={v.url}
+                />
+
+              ))
+
+            )}
+
+          </div>
+
+        </div>
+
+      ))}
 
     </div>
+
   );
+
 }
 
 
@@ -193,4 +383,48 @@ function Card({ title, value }) {
       <p className="text-2xl font-bold mt-2">{value}</p>
     </div>
   );
+}
+function VideoCard({ title, url }) {
+
+  const videoId = url.includes("watch?v=")
+    ? url.split("watch?v=")[1]
+    : null;
+
+  const thumbnail = videoId
+    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+    : null;
+
+  return (
+
+    <div className="border rounded-lg overflow-hidden bg-gray-50 hover:shadow-md transition">
+
+      {thumbnail && (
+        <img
+          src={thumbnail}
+          alt={title}
+          className="w-full h-40 object-cover"
+        />
+      )}
+
+      <div className="p-3">
+
+        <p className="text-sm font-medium line-clamp-2">
+          {title}
+        </p>
+
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block mt-2 text-sm text-indigo-600 hover:text-indigo-800"
+        >
+          Watch Video →
+        </a>
+
+      </div>
+
+    </div>
+
+  );
+
 }

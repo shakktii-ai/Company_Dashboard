@@ -36,9 +36,10 @@ if (!data.ok) {
       if (data.admin.role !== "admin") {
         if (data.admin.cultureInterviewCompleted) {
           router.push("/admin/employeeDashboard"); // interview already done
-        } else {
-          router.push("employee/culture-interview"); // interview pending
-        }
+        } 
+        // else {
+        //   router.push("employee/culture-interview"); // interview pending
+        // }
         return;
       }
 

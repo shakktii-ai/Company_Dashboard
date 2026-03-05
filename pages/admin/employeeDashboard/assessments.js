@@ -64,14 +64,24 @@ export default function EmployeeAssessments() {
 
                 </div>
 
-                <a
-                  href={`/employee-assessment/${a.slug}`}
-                  target="_blank"
-                 
-                  className="mt-4 inline-block text-blue-600 underline"
-                >
-                  /employee-assessment/{a.slug}
-                </a>
+            <div className="mt-4 flex gap-3">
+  {item.status === "pending" && (
+    <button
+      onClick={() =>
+        window.location.href = `/interviewLink/${a.slug}`
+      }
+      className="px-4 py-2 bg-indigo-600 text-white rounded-md text-sm"
+    >
+      Start Assessment
+    </button>
+  )}
+
+  {item.status === "completed" && (
+    <span className="text-sm text-gray-500">
+      Score: {item.latestScore || "Available in report"}
+    </span>
+  )}
+</div>
 
               </div>
             );

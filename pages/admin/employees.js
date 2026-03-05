@@ -144,7 +144,7 @@ export default function EmployeesPage() {
                                             <th className="py-2 pr-4">Email</th>
                                             <th className="py-2 pr-4">Role</th>
                                             <th className="py-2 pr-4">Status</th>
-                                            <th className="py-2 pr-4">Culture Test</th>
+                                           
                                         </tr>
                                     </thead>
 
@@ -172,7 +172,7 @@ export default function EmployeesPage() {
                                                 </td>
 
                                                 {/* Culture Interview */}
-                                                <td className="py-3 pr-4">
+                                                {/* <td className="py-3 pr-4">
                                                     {emp.cultureInterviewCompleted ? (
                                                         <span className="text-green-600 text-xs">
                                                             Completed
@@ -182,7 +182,7 @@ export default function EmployeesPage() {
                                                             Pending
                                                         </span>
                                                     )}
-                                                </td>
+                                                </td> */}
 
                                             </tr>
                                         ))}

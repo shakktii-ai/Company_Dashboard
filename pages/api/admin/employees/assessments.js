@@ -1,7 +1,7 @@
 import dbConnect from "../../../../lib/db";
 import Assign from "../../../../models/EmployeeAssessmentAssign";
 import { verifyTokenFromReq } from "../../../../lib/verifyToken";
-
+import '../../../../models/EmployeeAssessment';
 export default async function handler(req, res) {
   await dbConnect();
 

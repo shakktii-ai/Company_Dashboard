@@ -4,8 +4,28 @@ import dbConnect from "../../../lib/db";
 import Company from "../../../models/company";
 import CompanyOnboarding from "../../../models/CompanyOnboarding";
 import Admin from "../../../models/admin";
+import HODReview from "../../../models/HODReview";
 import bcrypt from "bcryptjs";
+import crypto from "crypto";
 import { signToken, setTokenCookie } from "../../../lib/auth";
+
+const HOD_QUESTIONS = [
+  "How would you define the core values that drive your department's decisions?",
+  "How effectively is the company's long-term vision communicated to your team?",
+  "What is the biggest cultural challenge your department faces currently?",
+  "How would you describe the level of cross-departmental collaboration at this company?",
+  "How does your department handle conflict or differing opinions among team members?",
+  "What specific behaviors are most rewarded or recognized in your department?",
+  "How frequently do you and your team engage in professional development or learning?",
+  "How would you rate the transparency of top-level management's communication?",
+  "In what ways does the company culture support or hinder innovation in your area?",
+  "How is work-life balance practiced and encouraged within your department?",
+  "What is the primary method used for giving and receiving feedback in your team?",
+  "How diverse and inclusive is the environment within your specific department?",
+  "How aligned are your department's goals with the overall company strategy?",
+  "What is one thing about the company culture you would change to improve efficiency?",
+  "How do you ensure that new hires in your department align with the existing culture?",
+];
 
 export default async function handler(req, res) {
   try {
@@ -168,18 +188,35 @@ export default async function handler(req, res) {
       companyId: company._id,
     });
 
-    // ✔ Create JWT token (not setting cookie - user must log in)
-    const token = signToken({
-      adminId: admin._id,
-      companyId: company._id,
-      email: admin.email,
-    });
+    // ✅ Generate 4 HOD Review Links (each with shuffled questions)
+    const hodLinks = [];
+
+    function shuffleArray(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    for (let i = 0; i < 4; i++) {
+      const hToken = crypto.randomBytes(16).toString("hex");
+      const shuffledQA = shuffleArray(HOD_QUESTIONS).map((q) => ({ question: q, answer: "" }));
+      await HODReview.create({
+        companyId: company._id,
+        token: hToken,
+        responses: shuffledQA,
+      });
+      hodLinks.push(hToken);
+    }
 
     return res.status(201).json({
       ok: true,
-      message: "Signup and onboarding successful. Please log in.",
+      message: "Signup and onboarding successful.",
       admin: { id: admin._id, email: admin.email, name: admin.name },
       company: { id: company._id, name: company.name },
+      hodLinks,
     });
 
   } catch (err) {

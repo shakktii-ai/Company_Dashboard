@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-
+import { nanoid } from "nanoid";
 const EmployeeAssessmentSchema = new mongoose.Schema({
   companyId: {
     type: mongoose.Schema.Types.ObjectId,

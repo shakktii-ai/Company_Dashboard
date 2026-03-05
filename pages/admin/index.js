@@ -7,7 +7,7 @@ import CompanyProfileModal from "../../components/CompanyProfileModal";
 import { FiUser } from "react-icons/fi";
 import jsPDF from "jspdf";
 import Link from "next/link";
-import {HiChevronDown } from 'react-icons/hi';
+import { HiChevronDown } from 'react-icons/hi';
 export default function AdminIndex() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -20,8 +20,13 @@ export default function AdminIndex() {
   const [reports, setReports] = useState([]);
   const [loadingReports, setLoadingReports] = useState(false);
 
+  // HOD Links
+  const [hodReviews, setHodReviews] = useState([]);
+  const [loadingHod, setLoadingHod] = useState(false);
+  const [copiedToken, setCopiedToken] = useState(null);
+
   // UI state
-  const [activeTab, setActiveTab] = useState("interviews"); // interviews | reports
+  const [activeTab, setActiveTab] = useState("interviews"); // interviews | reports | hod
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [recommendFilter, setRecommendFilter] = useState("all");
@@ -53,16 +58,21 @@ export default function AdminIndex() {
   const [selectedReport, setSelectedReport] = useState(null);
   const [showReportModal, setShowReportModal] = useState(false);
   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
-const [showProfileMenu, setShowProfileMenu] = useState(false);
- const [selectedInterviewReport, setSelectedInterviewReport] = useState(null);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [selectedInterviewReport, setSelectedInterviewReport] = useState(null);
   const [showInterviewReportModal, setShowInterviewReportModal] = useState(false);
-   const [showEmployeeSub, setShowEmployeeSub] = useState(false);
+  const [showEmployeeSub, setShowEmployeeSub] = useState(false);
+
+  const [selectedHodReview, setSelectedHodReview] = useState(null);
+  const [showHodModal, setShowHodModal] = useState(false);
+  const [showHodLinksListModal, setShowHodLinksListModal] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
     (async () => {
       await loadInterviews();
       await loadReports();
+      await loadHodLinks();
     })();
   }, []);
 
@@ -98,6 +108,28 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     } finally {
       setLoadingReports(false);
     }
+  }
+
+  async function loadHodLinks() {
+    try {
+      setLoadingHod(true);
+      const res = await window.fetch("/api/admin/hod/get-links", {
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (data.ok) setHodReviews(data.reviews || []);
+    } catch (err) {
+      console.error("loadHodLinks error", err);
+    } finally {
+      setLoadingHod(false);
+    }
+  }
+
+  function copyLink(token) {
+    const url = `${window.location.origin}/admin/hod-form/${token}`;
+    navigator.clipboard.writeText(url);
+    setCopiedToken(token);
+    setTimeout(() => setCopiedToken(null), 2000);
   }
 
   async function handleLogout() {
@@ -443,7 +475,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
     const fileName = `${report.email?.replace(/[^a-z0-9]/gi, '_')}_report_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(fileName);
   };
-  
+
   const downloadInterviewPDF = (report) => {
     const doc = new jsPDF();
     const margin = 20;
@@ -519,30 +551,30 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
   </button> */}
             </div>
 
-{/* Profile Dropdown */}
-<div className="relative">
-  <button
-    onClick={() => setShowProfileMenu(p => !p)}
-    className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center border border-black"
-  >
-    <FiUser size={18} />
-  </button>
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowProfileMenu(p => !p)}
+                className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center border border-black"
+              >
+                <FiUser size={18} />
+              </button>
 
-  {showProfileMenu && (
-    <>
-      {/* click outside overlay */}
-      <div
-        className="fixed inset-0 z-40"
-        onClick={() => setShowProfileMenu(false)}
-      />
+              {showProfileMenu && (
+                <>
+                  {/* click outside overlay */}
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowProfileMenu(false)}
+                  />
 
-      {/* dropdown */}
-     
+                  {/* dropdown */}
 
-<div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
 
-  {/* Profile */}
-  {/* <button
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+
+                    {/* Profile */}
+                    {/* <button
     onClick={() => {
       setShowCompanyProfile(true);
       setShowProfileMenu(false);
@@ -551,57 +583,70 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
   >
     Profile
   </button> */}
-<button
-                onClick={() => setShowCreate(true)}
-                className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
-              >
-                Create Interview
-              </button>
-  {/* Employee with Submenu */}
-  <div className="relative">
+                    <button
+                      onClick={() => setShowCreate(true)}
+                      className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      Create Interview
+                    </button>
+                    {/* Employee with Submenu */}
+                    <div className="relative">
 
-    <button
-      onClick={() => setShowEmployeeSub(!showEmployeeSub)}
-      className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
-    >
-     Manage Employee
-     <HiChevronDown />
-    </button>
+                      <button
+                        onClick={() => setShowEmployeeSub(!showEmployeeSub)}
+                        className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        Manage Employee
+                        <HiChevronDown />
+                      </button>
 
-    {showEmployeeSub && (
-      <div className="ml-2 border-l bg-gray-50">
+                      {showEmployeeSub && (
+                        <div className="ml-2 border-l bg-gray-50">
 
-        <Link
-          href="/admin/employees"
-          className="block px-4 py-2 text-sm hover:bg-gray-100"
-        >
-          Add Employee
-        </Link>
+                          <Link
+                            href="/admin/employees"
+                            className="block px-4 py-2 text-sm hover:bg-gray-100"
+                          >
+                            Add Employee
+                          </Link>
 
-        <Link
-          href="/admin/employee-assessments"
-          className="block px-4 py-2 text-sm hover:bg-gray-100"
-        >
-          Create Assessment
-        </Link>
+                          <Link
+                            href="/admin/employee-assessments"
+                            className="block px-4 py-2 text-sm hover:bg-gray-100"
+                          >
+                            Create Assessment
+                          </Link>
 
-      </div>
-    )}
-  </div>
+                        </div>
+                      )}
+                    </div>
 
-  {/* Logout */}
-  <button
-    onClick={handleLogout}
-    disabled={loggingOut}
-    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-  >
-    Logout
-  </button>
+                    {/* HOD Links - standalone item */}
+                    <button
+                      onClick={() => {
+                        loadHodLinks();
+                        setShowHodLinksListModal(true);
+                        setShowProfileMenu(false);
+                        setShowEmployeeSub(false);
+                      }}
+                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                    >
+                      HOD Links
+                    </button>
 
-</div>
-    </>
-  )}
-</div>
+                    {/* Logout */}
+                    <button
+                      onClick={handleLogout}
+                      disabled={loggingOut}
+                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                    >
+                      Logout
+                    </button>
+
+                  </div>
+                </>
+              )}
+            </div>
 
           </div>
         </div>
@@ -738,6 +783,8 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
             )}
 
 
+            {/* ⭐ HOD LINKS TAB REMOVED (NOW A MODAL) */}
+
             {/* ⭐ SHOW REPORTS ONLY IF TAB = reports */}
             {activeTab === "reports" && (
               <div className="lg:col-span-5">
@@ -786,7 +833,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                             <td className="py-3 pr-4">
                               <div className="flex gap-2">
                                 <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
- <button
+                                <button
                                   onClick={() => openInterviewReport(r.email, r.role)}
                                   className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
                                 >
@@ -829,209 +876,209 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
           </div>
         </div>
         <CompanyProfileModal
-  open={showCompanyProfile}
-  onClose={() => setShowCompanyProfile(false)}
-/>
+          open={showCompanyProfile}
+          onClose={() => setShowCompanyProfile(false)}
+        />
 
         {/* Create Modal */}
         {showCreate && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
-  <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[90vh]">
+            <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[90vh]">
 
-    {/* Header */}
-    <div className="flex items-center justify-between border-b px-6 py-4">
-      <h3 className="text-xl font-semibold text-gray-800">
-        Create Interview
-      </h3>
+              {/* Header */}
+              <div className="flex items-center justify-between border-b px-6 py-4">
+                <h3 className="text-xl font-semibold text-gray-800">
+                  Create Interview
+                </h3>
 
-      <button
-        onClick={() => setShowCreate(false)}
-        className="text-gray-500 hover:text-gray-700 text-lg"
-      >
-        ✕
-      </button>
-    </div>
+                <button
+                  onClick={() => setShowCreate(false)}
+                  className="text-gray-500 hover:text-gray-700 text-lg"
+                >
+                  ✕
+                </button>
+              </div>
 
-    {/* Form */}
-    <form
-      onSubmit={handleCreate}
-      className="p-6 overflow-y-auto space-y-5 flex-1"
-    >
+              {/* Form */}
+              <form
+                onSubmit={handleCreate}
+                className="p-6 overflow-y-auto space-y-5 flex-1"
+              >
 
-      {/* Job Role */}
-      <div>
-        <label className="text-sm font-medium text-gray-700">Job Role</label>
-        <input
-          value={form.jobRole}
-          onChange={(e) =>
-            setForm({ ...form, jobRole: e.target.value })
-          }
-          className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-        />
-        {errors.jobRole && (
-          <div className="text-xs text-red-600 mt-1">
-            {errors.jobRole}
-          </div>
-        )}
-      </div>
+                {/* Job Role */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Job Role</label>
+                  <input
+                    value={form.jobRole}
+                    onChange={(e) =>
+                      setForm({ ...form, jobRole: e.target.value })
+                    }
+                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  />
+                  {errors.jobRole && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {errors.jobRole}
+                    </div>
+                  )}
+                </div>
 
-      {/* Job Description */}
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Job Description
-        </label>
-        <textarea
-          value={form.jd}
-          onChange={(e) =>
-            setForm({ ...form, jd: e.target.value })
-          }
-          rows={4}
-          className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-        />
-        {errors.jd && (
-          <div className="text-xs text-red-600 mt-1">
-            {errors.jd}
-          </div>
-        )}
-      </div>
+                {/* Job Description */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Job Description
+                  </label>
+                  <textarea
+                    value={form.jd}
+                    onChange={(e) =>
+                      setForm({ ...form, jd: e.target.value })
+                    }
+                    rows={4}
+                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  />
+                  {errors.jd && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {errors.jd}
+                    </div>
+                  )}
+                </div>
 
-      {/* Qualification */}
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Qualification
-        </label>
-        <input
-          value={form.qualification}
-          onChange={(e) =>
-            setForm({ ...form, qualification: e.target.value })
-          }
-          className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-        />
-        {errors.qualification && (
-          <div className="text-xs text-red-600 mt-1">
-            {errors.qualification}
-          </div>
-        )}
-      </div>
+                {/* Qualification */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Qualification
+                  </label>
+                  <input
+                    value={form.qualification}
+                    onChange={(e) =>
+                      setForm({ ...form, qualification: e.target.value })
+                    }
+                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  />
+                  {errors.qualification && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {errors.qualification}
+                    </div>
+                  )}
+                </div>
 
-      {/* Criteria */}
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Criteria
-        </label>
-        <input
-          value={form.criteria}
-          onChange={(e) =>
-            setForm({ ...form, criteria: e.target.value })
-          }
-          className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-        />
-        {errors.criteria && (
-          <div className="text-xs text-red-600 mt-1">
-            {errors.criteria}
-          </div>
-        )}
-      </div>
+                {/* Criteria */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Criteria
+                  </label>
+                  <input
+                    value={form.criteria}
+                    onChange={(e) =>
+                      setForm({ ...form, criteria: e.target.value })
+                    }
+                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  />
+                  {errors.criteria && (
+                    <div className="text-xs text-red-600 mt-1">
+                      {errors.criteria}
+                    </div>
+                  )}
+                </div>
 
-      {/* Location */}
-      <div>
-        <label className="text-sm font-medium text-gray-700">
-          Location
-        </label>
-        <input
-          value={form.location}
-          onChange={(e) =>
-            setForm({ ...form, location: e.target.value })
-          }
-          className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-          placeholder="Bangalore, Pune, Noida"
-        />
-        {errors.location && (
-          <p className="text-xs text-red-600 mt-1">
-            {errors.location}
-          </p>
-        )}
-      </div>
+                {/* Location */}
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Location
+                  </label>
+                  <input
+                    value={form.location}
+                    onChange={(e) =>
+                      setForm({ ...form, location: e.target.value })
+                    }
+                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    placeholder="Bangalore, Pune, Noida"
+                  />
+                  {errors.location && (
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.location}
+                    </p>
+                  )}
+                </div>
 
-      {/* Questions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">
-            Aptitude
-          </label>
-          <input
-            type="number"
-            value={form.questions.aptitude}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                questions: {
-                  ...form.questions,
-                  aptitude: Number(e.target.value),
-                },
-              })
-            }
-            className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-          />
-          {errors.aptitude && (
-            <div className="text-xs text-red-600 mt-1">
-              {errors.aptitude}
+                {/* Questions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Aptitude
+                    </label>
+                    <input
+                      type="number"
+                      value={form.questions.aptitude}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          questions: {
+                            ...form.questions,
+                            aptitude: Number(e.target.value),
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    />
+                    {errors.aptitude && (
+                      <div className="text-xs text-red-600 mt-1">
+                        {errors.aptitude}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Technical
+                    </label>
+                    <input
+                      type="number"
+                      value={form.questions.technical}
+                      onChange={(e) =>
+                        setForm({
+                          ...form,
+                          questions: {
+                            ...form.questions,
+                            technical: Number(e.target.value),
+                          },
+                        })
+                      }
+                      className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+                    />
+                    {errors.technical && (
+                      <div className="text-xs text-red-600 mt-1">
+                        {errors.technical}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {errors.total && (
+                  <div className="text-sm text-red-700">
+                    {errors.total}
+                  </div>
+                )}
+
+                {/* Footer Buttons */}
+                <div className="flex items-center justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreate(false)}
+                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow"
+                  >
+                    Create Interview
+                  </button>
+                </div>
+              </form>
             </div>
-          )}
-        </div>
-
-        <div>
-          <label className="text-sm font-medium text-gray-700">
-            Technical
-          </label>
-          <input
-            type="number"
-            value={form.questions.technical}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                questions: {
-                  ...form.questions,
-                  technical: Number(e.target.value),
-                },
-              })
-            }
-            className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-          />
-          {errors.technical && (
-            <div className="text-xs text-red-600 mt-1">
-              {errors.technical}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {errors.total && (
-        <div className="text-sm text-red-700">
-          {errors.total}
-        </div>
-      )}
-
-      {/* Footer Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-4 border-t">
-        <button
-          type="button"
-          onClick={() => setShowCreate(false)}
-          className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
-        >
-          Cancel
-        </button>
-
-        <button
-          type="submit"
-          className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow"
-        >
-          Create Interview
-        </button>
-      </div>
-    </form>
-  </div>
-</div>)}
+          </div>)}
 
         {/* Report Modal */}
         {/* ===========================
@@ -1112,10 +1159,10 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
                           <div className="w-24 h-2 bg-gray-200 rounded-full">
                             <div
                               className={`h-full rounded-full ${value >= 7
-                                  ? "bg-green-500"
-                                  : value >= 4
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
+                                ? "bg-green-500"
+                                : value >= 4
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
                                 }`}
                               style={{ width: `${(value / 10) * 100}%` }}
                             />
@@ -1193,7 +1240,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
 
               {/* ================= ACTIONS ================= */}
               <div className="flex justify-between items-center mt-8">
-                
+
                 <div className="flex gap-3">
 
                   {/* Download PDF */}
@@ -1243,7 +1290,7 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
             </div>
           </div>
         )}
-{showInterviewReportModal && selectedInterviewReport && (() => {
+        {showInterviewReportModal && selectedInterviewReport && (() => {
 
           const text = selectedInterviewReport.reportAnalysis || "";
 
@@ -1428,6 +1475,133 @@ const [showProfileMenu, setShowProfileMenu] = useState(false);
         })()}
 
 
+        {/* ⭐ HOD FEEDBACK MODAL */}
+        {showHodModal && selectedHodReview && (
+          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+              <button
+                onClick={() => setShowHodModal(false)}
+                className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+
+              <div className="border-b pb-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">HOD Culture Review Feedback</h2>
+                <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                  <p className="text-gray-600"><strong>HOD Name:</strong> {selectedHodReview.hodName || "N/A"}</p>
+                  <p className="text-gray-600"><strong>Department:</strong> {selectedHodReview.departmentName || "N/A"}</p>
+                  <p className="text-gray-600"><strong>Submitted:</strong> {new Date(selectedHodReview.submittedAt).toLocaleString()}</p>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {selectedHodReview.responses && selectedHodReview.responses.map((item, idx) => (
+                  <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                    <p className="text-sm font-bold text-indigo-600 mb-1">Question {idx + 1}</p>
+                    <p className="text-gray-900 font-semibold mb-3">{item.question}</p>
+                    <div className="bg-white p-4 rounded-lg border border-gray-200 text-gray-700 leading-relaxed min-h-[60px]">
+                      {item.answer || <span className="text-gray-400 italic">No answer provided</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end mt-8">
+                <button
+                  onClick={() => setShowHodModal(false)}
+                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* ⭐ HOD LINKS LIST MODAL */}
+        {showHodLinksListModal && (
+          <div className="fixed inset-0 bg-black/50 z-[55] flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+              <button
+                onClick={() => setShowHodLinksListModal(false)}
+                className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
+
+              <div className="border-b pb-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">HOD Review Links</h2>
+                <p className="text-sm text-gray-600 mt-1">Copy and share these links with your department heads.</p>
+              </div>
+
+              {loadingHod ? (
+                <div className="text-center py-20 text-gray-400">Loading links...</div>
+              ) : hodReviews.length === 0 ? (
+                <div className="text-center py-20 text-gray-400 italic">No HOD links generated yet. Complete onboarding steps to generate links.</div>
+              ) : (
+                <div className="space-y-4">
+                  {hodReviews.map((review, idx) => {
+                    const url = typeof window !== "undefined"
+                      ? `${window.location.origin}/admin/hod-form/${review.token}`
+                      : `/admin/hod-form/${review.token}`;
+                    return (
+                      <div key={review.token} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+                        <span className="text-xs font-bold text-gray-400 w-5">#{idx + 1}</span>
+
+                        <input
+                          readOnly
+                          value={url}
+                          className="flex-1 bg-white text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none cursor-text focus:border-indigo-300"
+                          onFocus={e => e.target.select()}
+                        />
+
+                        <span className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full uppercase tracking-wider whitespace-nowrap ${review.isSubmitted
+                          ? "bg-green-100 text-green-700"
+                          : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                          {review.isSubmitted ? "Submitted" : "Pending"}
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => copyLink(review.token)}
+                            className={`px-4 py-2 rounded-lg text-sm font-semibold border transition shrink-0 ${copiedToken === review.token
+                              ? "bg-green-500 border-green-500 text-white"
+                              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {copiedToken === review.token ? "Copied!" : "Copy Link"}
+                          </button>
+
+                          {review.isSubmitted && (
+                            <button
+                              onClick={() => {
+                                setSelectedHodReview(review);
+                                setShowHodModal(true);
+                              }}
+                              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+                            >
+                              Feedback
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex justify-end mt-8">
+                <button
+                  onClick={() => setShowHodLinksListModal(false)}
+                  className="px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition shadow-lg shadow-gray-200"
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
