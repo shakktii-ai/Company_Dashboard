@@ -33,15 +33,20 @@ if (!data.ok) {
       localStorage.setItem("role", data.admin.role);
 
       // ✅ Employee / HOD / Leader
-      if (data.admin.role !== "admin") {
-        if (data.admin.cultureInterviewCompleted) {
-          router.push("/admin/employeeDashboard"); // interview already done
-        } 
-        // else {
-        //   router.push("employee/culture-interview"); // interview pending
-        // }
-        return;
-      }
+      // if (data.admin.role !== "admin") {
+      //   if (data.admin.cultureInterviewCompleted) {
+      //     router.push("/admin/employeeDashboard"); // interview already done
+      //   } 
+      //   else {
+      //     router.push("employee/culture-interview"); // interview pending
+      //   }
+      //   return;
+      // }
+      // ✅ Employee / HOD / Leader (no culture check)
+if (data.admin.role !== "admin") {
+  router.push("/admin/employeeDashboard");
+  return;
+}
 
       // ✅ Admin flow
       if (!data.company.onboardingCompleted) {
