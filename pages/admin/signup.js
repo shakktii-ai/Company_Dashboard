@@ -233,7 +233,24 @@ export default function Signup() {
                 label="Company Type *"
                 value={form.companyType}
                 onChange={(v) => handleChange("companyType", v)}
-                options={["Startup", "MNC", "PSU", "Family Business"]}
+                options={[
+                  "Startup",
+                  "MNC",
+                  "SME / MSME",
+                  "Private Limited Company",
+                  "Public Limited Company",
+                  "LLP (Limited Liability Partnership)",
+                  "Partnership Firm",
+                  "Sole Proprietorship",
+                  "Family Business",
+                  "Government / PSU",
+                  "Non-Profit Organization (NGO)",
+                  "Educational Institution",
+                  "Consulting Firm",
+                  "Agency / Service Based",
+                  "Product Based Company",
+                  "E-commerce Company"
+                ]}
                 error={errors.companyType}
               />
               <Select
@@ -320,8 +337,8 @@ export default function Signup() {
                   <p className="text-sm text-gray-700">Add team members who will help manage interviews. You can add more employees later.</p>
                 </div> */}
 
-                {/* Employee Form */}
-                {/* <div className="border border-gray-200 rounded p-4 mb-6">
+          {/* Employee Form */}
+          {/* <div className="border border-gray-200 rounded p-4 mb-6">
                   <h3 className="font-semibold text-gray-900 mb-4">Add New Employee</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
@@ -359,8 +376,8 @@ export default function Signup() {
                   </button>
                 </div> */}
 
-                {/* Employees List */}
-                {/* {employees.length > 0 && (
+          {/* Employees List */}
+          {/* {employees.length > 0 && (
                   <div className="md:col-span-2">
                     <h3 className="font-semibold text-gray-900 mb-4">Added Employees ({employees.length})</h3>
                     <div className="space-y-2">
@@ -384,7 +401,7 @@ export default function Signup() {
                     </div>
                   </div>
                 )} */}
-              {/* </div>
+          {/* </div>
             </Section>
           )} */}
 

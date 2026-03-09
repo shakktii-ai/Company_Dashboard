@@ -62,7 +62,8 @@ export default function AdminIndex() {
   const [selectedInterviewReport, setSelectedInterviewReport] = useState(null);
   const [showInterviewReportModal, setShowInterviewReportModal] = useState(false);
   const [showEmployeeSub, setShowEmployeeSub] = useState(false);
-
+  const [combinedReport, setCombinedReport] = useState(null);
+  const [showCombinedModal, setShowCombinedModal] = useState(false);
   const [selectedHodReview, setSelectedHodReview] = useState(null);
   const [showHodModal, setShowHodModal] = useState(false);
   const [showHodLinksListModal, setShowHodLinksListModal] = useState(false);
@@ -503,6 +504,177 @@ export default function AdminIndex() {
       `${report.email.replace(/[^a-z0-9]/gi, "_")}_interview_report.pdf`
     );
   };
+
+  const downloadFullReportPDF = (assessment, interview) => {
+
+  const doc = new jsPDF();
+
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+
+  let yPos = margin;
+
+  const addText = (text, x, y, maxWidth) => {
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, x, y);
+    return y + lines.length * 6;
+  };
+
+  /* ================= HEADER ================= */
+
+  doc.setFontSize(18);
+  doc.setFont("helvetica","bold");
+
+  doc.text("Candidate Evaluation Report", margin, yPos);
+
+  yPos += 10;
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica","normal");
+
+  doc.text(`Email: ${assessment.email}`, margin, yPos);
+  yPos += 6;
+
+  doc.text(`Role: ${assessment.role}`, margin, yPos);
+  yPos += 6;
+
+  doc.text(`Generated: ${new Date(assessment.createdAt).toLocaleString()}`, margin, yPos);
+  yPos += 12;
+
+  /* ================= ASSESSMENT ================= */
+
+  doc.setFontSize(14);
+  doc.setFont("helvetica","bold");
+  doc.text("Assessment Evaluation", margin, yPos);
+  yPos += 8;
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica","normal");
+
+  const roleFit = assessment.reportAnalysis?.roleFit;
+
+  if (roleFit) {
+    yPos = addText(
+      `Role Fit: ${roleFit.match} - ${roleFit.explanation}`,
+      margin,
+      yPos,
+      pageWidth - margin * 2
+    );
+    yPos += 6;
+  }
+
+  /* SCORECARD */
+
+  const scores = assessment.reportAnalysis?.scores || {};
+
+  Object.entries(scores).forEach(([key,value])=>{
+    doc.text(
+      `${key.replace(/([A-Z])/g," $1")}: ${value}/10`,
+      margin,
+      yPos
+    );
+    yPos += 6;
+  });
+
+  yPos += 4;
+
+  doc.setFont("helvetica","bold");
+
+  doc.text(
+    `Overall Score: ${assessment.reportAnalysis?.overallScore || 0} / 60`,
+    margin,
+    yPos
+  );
+
+  yPos += 10;
+
+  /* SECTION EVALUATION */
+
+  const sections = assessment.reportAnalysis?.evaluationText || {};
+
+  Object.entries(sections).forEach(([key,value])=>{
+
+    if(key === "overallSummary") return;
+
+    doc.setFont("helvetica","bold");
+
+    doc.text(
+      key.replace(/([A-Z])/g," $1"),
+      margin,
+      yPos
+    );
+
+    yPos += 6;
+
+    doc.setFont("helvetica","normal");
+
+    yPos = addText(
+      value,
+      margin,
+      yPos,
+      pageWidth - margin * 2
+    );
+
+    yPos += 6;
+
+  });
+
+  if (sections.overallSummary) {
+
+    doc.setFont("helvetica","bold");
+
+    doc.text("Overall Assessment Summary", margin, yPos);
+
+    yPos += 6;
+
+    doc.setFont("helvetica","normal");
+
+    yPos = addText(
+      sections.overallSummary,
+      margin,
+      yPos,
+      pageWidth - margin * 2
+    );
+
+    yPos += 10;
+  }
+
+  /* ================= INTERVIEW ================= */
+
+  if (interview?.reportAnalysis) {
+
+    if (yPos > pageHeight - 40) {
+      doc.addPage();
+      yPos = margin;
+    }
+
+    doc.setFontSize(14);
+    doc.setFont("helvetica","bold");
+
+    doc.text("Interview Evaluation", margin, yPos);
+
+    yPos += 8;
+
+    doc.setFontSize(11);
+    doc.setFont("helvetica","normal");
+
+    yPos = addText(
+      interview.reportAnalysis,
+      margin,
+      yPos,
+      pageWidth - margin * 2
+    );
+  }
+
+  /* ================= SAVE ================= */
+
+  const fileName =
+    `${assessment.email.replace(/[^a-z0-9]/gi,"_")}_full_report.pdf`;
+
+  doc.save(fileName);
+
+};
   async function openInterviewReport(email, role) {
     try {
       const res = await fetch(
@@ -521,6 +693,26 @@ export default function AdminIndex() {
     } catch (err) {
       console.error(err);
       alert("Error loading interview report");
+    }
+  }
+  async function openCombinedReport(report) {
+    try {
+      const res = await fetch(
+        `/api/admin/interview-reports?email=${report.email}&role=${report.role}`,
+        { credentials: "include" }
+      );
+
+      const data = await res.json();
+
+      setCombinedReport({
+        assessment: report,
+        interview: data.report || null,
+      });
+
+      setShowCombinedModal(true);
+
+    } catch (err) {
+      console.error(err);
     }
   }
   return (
@@ -809,7 +1001,7 @@ export default function AdminIndex() {
                         <tr className="text-left text-xs text-gray-500">
                           <th className="py-2 pr-4">Email</th>
                           <th className="py-2 pr-4">Role</th>
-                          <th className="py-2 pr-4">Recommendation</th>
+                          {/* <th className="py-2 pr-4">Recommendation</th> */}
                           <th className="py-2 pr-4">Date</th>
                           <th className="py-2 pr-4">Report</th>
                         </tr>
@@ -824,15 +1016,15 @@ export default function AdminIndex() {
                           <tr key={r._id} className="border-t">
                             <td className="py-3 pr-4">{r.email}</td>
                             <td className="py-3 pr-4">{r.role}</td>
-                            <td className="py-3 pr-4">
+                            {/* <td className="py-3 pr-4">
                               <span className={`px-2 py-1 rounded-full text-xs ${r.reportAnalysis?.recommendation === "Proceed" ? "bg-green-50 text-green-700" : r.reportAnalysis?.recommendation === "Borderline" ? "bg-yellow-50 text-yellow-700" : "bg-gray-100 text-gray-800"}`}>
                                 {r.reportAnalysis?.recommendation || "Pending"}
                               </span>
-                            </td>
+                            </td> */}
                             <td className="py-3 pr-4">{new Date(r.createdAt).toLocaleString()}</td>
                             <td className="py-3 pr-4">
                               <div className="flex gap-2">
-                                <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
+                                {/* <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
                                 <button
                                   onClick={() => openInterviewReport(r.email, r.role)}
                                   className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
@@ -840,6 +1032,12 @@ export default function AdminIndex() {
                                   Interview
 
 
+                                </button> */}
+                                <button
+                                  onClick={() => openCombinedReport(r)}
+                                  className="px-3 py-1 bg-indigo-600 text-white rounded text-sm"
+                                >
+                                  View
                                 </button>
                               </div>
                             </td>
@@ -1081,9 +1279,415 @@ export default function AdminIndex() {
           </div>)}
 
         {/* Report Modal */}
-        {/* ===========================
-     BEAUTIFUL REPORT MODAL
-    =========================== */}
+        {showCombinedModal && combinedReport && (() => {
+
+          const assessment = combinedReport.assessment;
+          const interview = combinedReport.interview;
+
+          const text = interview?.reportAnalysis || "";
+
+          const scoreRegex =
+            /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
+
+          const scores = [];
+          let match;
+
+          while ((match = scoreRegex.exec(text)) !== null) {
+            scores.push({
+              label: match[1].replace(/\s+/g, " ").trim(),
+              value: Number(match[2])
+            });
+          }
+
+          const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
+          const overallMatch = text.match(overallRegex);
+
+          const overallScore = overallMatch ? Number(overallMatch[1]) : 0;
+          const overallTotal = overallMatch ? Number(overallMatch[2]) : 50;
+
+          const improvementRegex = /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
+
+          const improvementMatch = text.match(improvementRegex);
+
+          const improvementText = improvementMatch ? improvementMatch[1].trim() : null;
+
+          const mainText = improvementMatch
+            ? text.replace(improvementRegex, "").trim()
+            : text;
+
+// Assessment score out of 60
+const assessmentScore = assessment?.reportAnalysis?.overallScore || 0;
+
+// Interview score
+const interviewScore = overallScore || 0;
+
+// Normalize scores safely
+const assessmentPercent = (assessmentScore / 60) * 100;
+
+let interviewPercent = 0;
+
+if (interview && overallTotal > 0) {
+  interviewPercent = (interviewScore / overallTotal) * 100;
+}
+
+// Weighted score
+let finalScore;
+
+if (interview) {
+  // Assessment 60% + Interview 40%
+  finalScore = (assessmentPercent * 0.6) + (interviewPercent * 0.4);
+} else {
+  // If interview not available use only assessment
+  finalScore = assessmentPercent;
+}
+
+let finalRecommendation = "Borderline";
+
+if (finalScore >= 70) {
+  finalRecommendation = "Proceed";
+} else if (finalScore >= 50) {
+  finalRecommendation = "Borderline";
+} else {
+  finalRecommendation = "Reject";
+}
+
+          return (
+
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+
+              <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
+
+                <button
+                  onClick={() => setShowCombinedModal(false)}
+                  className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
+                >
+                  ✕
+                </button>
+
+                {/* HEADER */}
+
+                <div className="border-b pb-6 mb-6 flex justify-between items-center">
+
+                  <div>
+                    <h2 className="text-2xl font-semibold text-gray-900">
+                      {assessment.email}
+                    </h2>
+
+                    <p className="text-sm text-gray-600">
+                      Role: {assessment.role}
+                    </p>
+
+                    <p className="text-xs text-gray-400 mt-1">
+                      Generated on {new Date(assessment.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+
+                  {/* <span
+                    className={`px-4 py-2 rounded-full text-sm font-semibold
+${finalRecommendation === "Proceed"
+                        ? "bg-green-100 text-green-700"
+                        : finalRecommendation === "Borderline"
+                          ? "bg-yellow-100 text-yellow-700"
+                          : "bg-red-100 text-red-700"}
+`}
+                  >
+                    {finalRecommendation}
+                  </span> */}
+
+                </div>
+
+                {/* SCORE SUMMARY */}
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+  <div className="p-4 bg-indigo-50 rounded-lg border">
+    <p className="text-sm text-gray-600">Assessment Score</p>
+    <p className="text-2xl font-bold text-indigo-700">
+      {assessmentScore}/60
+    </p>
+  </div>
+
+  <div className="p-4 bg-green-50 rounded-lg border">
+    <p className="text-sm text-gray-600">Interview Score</p>
+    <p className="text-2xl font-bold text-green-700">
+      {interviewScore}/{overallTotal}
+    </p>
+  </div>
+
+  <div className="p-4 bg-gray-100 rounded-lg border">
+    <p className="text-sm text-gray-600">Weighted Score</p>
+    <p className="text-2xl font-bold">
+      {finalScore.toFixed(1)}%
+    </p>
+  </div>
+
+  <div className="p-4 bg-gray-50 rounded-lg border">
+    <p className="text-sm text-gray-600">Final Decision</p>
+    <p className="text-xl font-semibold">
+      {finalRecommendation}
+    </p>
+  </div>
+
+</div>
+                {/* ================= ASSESSMENT ================= */}
+
+                <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-indigo-500 pl-3 mb-4">
+                  Assessment Evaluation
+                </h3>
+
+                {/* <div className="p-5 border bg-gray-50 rounded-lg">
+
+                  <p className="text-sm text-gray-700 leading-relaxed">
+
+                    <strong>Role Fit:</strong>{" "}
+                    {assessment.reportAnalysis?.roleFit?.match} —{" "}
+                    {assessment.reportAnalysis?.roleFit?.explanation}
+
+                  </p>
+
+                </div> */}
+
+                {/* SCORECARDS */}
+
+                <div className="mt-8">
+
+               
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+                    {Object.entries(assessment.reportAnalysis?.scores || {}).map(
+                      ([key, value]) => (
+
+                        <div key={key} className="p-4 border rounded-lg shadow-sm">
+
+                          <div className="text-sm text-gray-600 capitalize">
+                            {key.replace(/([A-Z])/g, " $1")}
+                          </div>
+
+                          <div className="mt-2 text-2xl font-bold">
+                            {value}/10
+                          </div>
+
+                        </div>
+
+                      ))}
+
+                  </div>
+
+                  <p className="text-sm text-gray-500 mt-3">
+
+                    Overall Score:
+                    <strong> {assessmentScore} / 60</strong>
+
+                  </p>
+
+                </div>
+
+                {/* SECTION EVALUATION */}
+
+                <div className="mt-8 space-y-4">
+
+                  {Object.entries(
+                    assessment.reportAnalysis?.evaluationText || {}
+                  ).map(([key, value]) =>
+
+                    key !== "overallSummary" && (
+
+                      <div
+                        key={key}
+                        className="p-4 border rounded-lg bg-white shadow-sm"
+                      >
+
+                        <div className="font-medium text-gray-900 capitalize">
+                          {key.replace(/([A-Z])/g, " $1")}
+                        </div>
+
+                        <p className="text-sm text-gray-700 mt-1">
+                          {value}
+                        </p>
+
+                      </div>
+
+                    )
+
+                  )}
+
+                </div>
+
+                {/* SUMMARY */}
+
+                <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+
+                  <h3 className="text-lg font-semibold text-blue-800">
+                    Overall Assessment Summary
+                  </h3>
+
+                  <p className="text-sm text-blue-900 mt-2 leading-relaxed">
+                    {assessment.reportAnalysis?.evaluationText?.overallSummary}
+                  </p>
+
+                </div>
+
+                {/* ================= INTERVIEW ================= */}
+
+                {interview && (
+
+                  <>
+
+                    <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mt-10 mb-4">
+                      Interview Evaluation
+                    </h3>
+
+                    {/* INTERVIEW SCORECARDS */}
+
+                    {scores.length > 0 && (
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+                        {scores.map((s, i) => (
+
+                          <div
+                            key={i}
+                            className="p-4 border rounded-lg shadow-sm"
+                          >
+
+                            <div className="text-sm text-gray-600">
+                              {s.label}
+                            </div>
+
+                            <div className="text-2xl font-bold">
+                              {s.value}/10
+                            </div>
+
+                          </div>
+
+                        ))}
+
+                      </div>
+
+                    )}
+
+                    {overallScore > 0 && (
+
+                      <p className="text-sm text-gray-600 mt-3">
+
+                        <strong>Overall Score:</strong> {overallScore} / {overallTotal}
+
+                      </p>
+
+                    )}
+
+                    {/* INTERVIEW ANALYSIS */}
+
+                    <div className="mt-8">
+
+                      <h3 className="text-lg font-semibold mb-3">
+                        Detailed Evaluation
+                      </h3>
+
+                      <div className="text-sm text-gray-700 whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
+                        {mainText}
+                      </div>
+
+                    </div>
+
+                    {/* IMPROVEMENTS */}
+
+                    {improvementText && (
+
+                      <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+
+                        <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                          Improvement Suggestions
+                        </h3>
+
+                        <div className="text-sm text-blue-900 whitespace-pre-wrap">
+                          {improvementText}
+                        </div>
+
+                      </div>
+
+                    )}
+
+                  </>
+
+                )}
+
+
+
+                {/* ACTIONS */}
+
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-10 border-t pt-6">
+
+{/* LEFT SIDE ACTIONS */}
+
+  <div className="flex gap-3">
+
+<button
+  onClick={()=>downloadFullReportPDF(assessment, interview)}
+  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition"
+>
+  Download Report
+</button>
+<button
+  onClick={async () => {
+
+    const newStatus = !assessment.shortlisted;
+
+    const res = await fetch(
+      `/api/admin/reports/${assessment._id}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ shortlisted: newStatus })
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.ok) {
+      setShowCombinedModal(false);
+      loadReports();
+    }
+
+  }}
+  className={`px-5 py-2 rounded-md text-white font-medium transition
+  ${assessment.shortlisted
+    ? "bg-red-600 hover:bg-red-700"
+    : "bg-green-600 hover:bg-green-700"}
+  `}
+>
+  {assessment.shortlisted
+    ? "Remove from Shortlist"
+    : "Shortlist"}
+</button>
+
+
+
+
+  </div>
+
+{/* RIGHT SIDE ACTION */}
+
+  <div>
+    <button
+  onClick={() => setShowCombinedModal(false)}
+  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium transition"
+>
+  Close
+</button>
+
+
+  </div>
+
+</div>
+
+              </div>
+            </div>
+
+          );
+
+        })()}
         {showReportModal && selectedReport && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
@@ -1294,14 +1898,6 @@ export default function AdminIndex() {
 
           const text = selectedInterviewReport.reportAnalysis || "";
 
-          /* =========================================================
-             1️⃣ SCORE EXTRACTION (Robust & Flexible)
-             Handles:
-             - Technical Proficiency: 6/10
-             - Decision-Making: 7/10
-             - Decision Making: 7/10
-             - With spaces / hyphen variations
-          ========================================================= */
 
           const scoreRegex =
             /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
@@ -1316,24 +1912,12 @@ export default function AdminIndex() {
             });
           }
 
-          /* =========================================================
-             2️⃣ OVERALL SCORE EXTRACTION
-             Handles:
-             - Overall: 25/50
-             - Overall Score: 25/50
-          ========================================================= */
 
           const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
           const overallMatch = text.match(overallRegex);
 
           const overallScore = overallMatch ? Number(overallMatch[1]) : null;
           const overallTotal = overallMatch ? Number(overallMatch[2]) : null;
-
-          /* =========================================================
-             3️⃣ IMPROVEMENT SUGGESTIONS EXTRACTION
-             Handles everything after:
-             "Improvement Suggestions:"
-          ========================================================= */
 
           const improvementRegex =
             /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
@@ -1343,10 +1927,6 @@ export default function AdminIndex() {
           const improvementText = improvementMatch
             ? improvementMatch[1].trim()
             : null;
-
-          /* =========================================================
-             4️⃣ MAIN ANALYSIS TEXT (Remove improvements section)
-          ========================================================= */
 
           const mainText = improvementMatch
             ? text.replace(improvementRegex, "").trim()
