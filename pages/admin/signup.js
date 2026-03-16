@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-
+import { LuBuilding2 } from "react-icons/lu";
 export default function Signup() {
   const router = useRouter();
   const [step, setStep] = useState(1);
@@ -175,7 +175,12 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4 py-8">
       <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl p-6 sm:p-8">
-        <h1 className="text-2xl font-semibold text-gray-900">Company Onboarding</h1>
+          <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-teal-600 rounded-full flex items-center justify-center">
+                <LuBuilding2 className="w-6 h-6 text-white" />
+              </div>
+              <h1 className="text-3xl font-semibold text-slate-800">Company Onboarding</h1>
+            </div>
         {/* <p className="text-sm text-gray-600 mt-1 mb-6">
           Step {step} of 4 · Complete your company setup
         </p> */}
@@ -185,7 +190,7 @@ export default function Signup() {
           {[1, 2].map((s) => (
             <div
               key={s}
-              className={`h-1 flex-1 rounded-full ${step >= s ? "bg-indigo-600" : "bg-gray-200"}`}
+              className={`h-1 flex-1 rounded-full ${step >= s ? 'bg-teal-600' : 'bg-slate-200'}`}
             />
           ))}
         </div>
@@ -420,7 +425,7 @@ export default function Signup() {
               <button
                 type="button"
                 onClick={next}
-                className="px-6 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+                 className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg"
               >
                 Continue
               </button>
@@ -429,8 +434,7 @@ export default function Signup() {
                 type="button"
                 onClick={handleSubmit}
                 disabled={loading}
-                className="px-6 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-              >
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-teal-600 text-white rounded-lg font-medium hover:from-teal-600 hover:to-teal-700 transition-all shadow-md hover:shadow-lg" >
                 {loading ? "Submitting..." : "Submit"}
               </button>
             )}

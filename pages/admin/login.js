@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-
+import { FiMail, FiLock, FiLogIn } from "react-icons/fi";
+import { TbUserCircle } from "react-icons/tb";
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const router = useRouter();
@@ -63,43 +64,104 @@ if (data.admin.role !== "admin") {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-sm bg-white shadow-lg rounded-xl p-6">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
 
+      <div className="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
+
+        {/* Icon */}
+        {/* <div className="flex justify-center mb-4">
+          <div className="bg-teal-500 text-white w-12 h-12 rounded-full flex items-center justify-center text-2xl">
+            <TbUserCircle/>
+          </div>
+        </div> */}
+
+        {/* Heading */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-semibold text-gray-800">Login</h1>
+          <p className="text-sm text-gray-500">
+             Sign in to access your workspace
+          </p>
+        </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            name="email"
-            placeholder="Email"
-            onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
 
-          <input
-            name="password"
-            placeholder="Password"
-            type="password"
-            onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          {/* Email */}
+          <div>
+            <label className="text-sm text-gray-600">Email</label>
 
+            <div className="flex items-center border rounded-lg px-3 mt-1">
+              <FiMail className="text-gray-400 mr-2" />
+              <input
+                name="email"
+                placeholder="Enter your email"
+                onChange={handleChange}
+                className="w-full py-2 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Password */}
+          <div>
+            <label className="text-sm text-gray-600">Password</label>
+
+            <div className="flex items-center border rounded-lg px-3 mt-1">
+              <FiLock className="text-gray-400 mr-2" />
+              <input
+                name="password"
+                type="password"
+                placeholder="Enter your password"
+                onChange={handleChange}
+                className="w-full py-2 focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Remember + Forgot */}
+          <div className="flex justify-between items-center text-sm">
+
+            <label className="flex items-center gap-2 text-gray-600">
+              <input type="checkbox" />
+              Remember me
+            </label>
+
+            <a className="text-teal-600 hover:underline cursor-pointer">
+              Forgot password?
+            </a>
+
+          </div>
+
+          {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 transition"
+            className="w-full bg-teal-500 hover:bg-teal-600 text-white py-3 rounded-lg font-medium shadow-md transition"
           >
             {loading ? "Login..." : "Login"}
           </button>
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">
-             New here?{" "}
-              <Link href="/admin/signup" className="text-blue-600 hover:underline">
-              Onboard your company
-              </Link>
-            </p>
-          </div>
+
         </form>
+
+        {/* Signup */}
+        <div className="text-center mt-6">
+          <p className="text-sm text-gray-500">
+            New here?{" "}
+            <Link
+              href="/admin/signup"
+              className="text-teal-600 hover:underline"
+            >
+              Onboard your company
+            </Link>
+          </p>
+        </div>
+
       </div>
+
+      {/* Footer */}
+      <p className="absolute bottom-4 text-xs text-gray-400">
+        © 2026 Employee Hub. All rights reserved.
+      </p>
+
     </div>
   );
 }
