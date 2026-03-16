@@ -1,430 +1,299 @@
 import { useEffect, useState } from "react";
-import { FiLogOut } from "react-icons/fi";
-import { FaEye } from "react-icons/fa";
-import AssessmentsPage from "../../../pages/admin/employeeDashboard/assessments";
-import EmployeeReportModal from '../../../components/EmployeeReportModal';
+import {
+  FiLogOut,
+  FiFileText,
+  FiVideo,
+  FiClipboard,
+  FiMenu,
+  FiX
+} from "react-icons/fi";
+import { FaBell } from "react-icons/fa";
+import AssessmentsPage from "../../../components/assessments";
+import Video from "@/components/EmployeeVideoPage";
+import Report from "@/components/EmployeeReportPage";
 import { useRouter } from "next/router";
+
 export default function EmployeeDashboard() {
-    const router=useRouter();
+
+  const router = useRouter();
+
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState("assessments");
-const [loggingOut, setLoggingOut] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pageTitle = {
+    assessments: "My Assessments",
+    report: "Reports",
+    video: "Video Resources"
+  };
   useEffect(() => {
-    const role = localStorage.getItem("role");
-    const userId = localStorage.getItem("userId");
-
-    setUser({
-      role,
-      userId,
-    });
+    loadUser();
   }, []);
-async function handleLogout() {
+
+  async function loadUser() {
+
     try {
-      setLoggingOut(true);
-      const res = await window.fetch("/api/admin/logout", {
-        method: "POST",
-        credentials: "include",
+
+      const res = await fetch("/api/admin/employees/me", {
+        credentials: "include"
       });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setUser(data.user);
+      }
+
+    } catch (err) {
+      console.log(err);
+    }
+
+  }
+
+  async function handleLogout() {
+
+    try {
+
+      setLoggingOut(true);
+
+      const res = await fetch("/api/admin/logout", {
+        method: "POST",
+        credentials: "include"
+      });
+
       if (res.ok) {
         router.push("/admin/login");
       }
+
     } catch (err) {
-      console.error("logout error", err);
+      console.log(err);
       setLoggingOut(false);
     }
+
   }
+
   return (
-    <div className="min-h-screen bg-gray-100">
 
-      {/* ================= TOP NAV ================= */}
-      <header className="bg-white shadow">
+    <div className="flex min-h-screen bg-gray-100">
 
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+      {/* ================= MOBILE OVERLAY ================= */}
 
-          {/* LEFT NAV */}
-          <div className="flex items-center gap-6">
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-            <h2 className="text-lg font-semibold text-indigo-600">
-              Employee Panel
-            </h2>
+      {/* ================= SIDEBAR ================= */}
 
-            <nav className="hidden md:flex items-center gap-4 text-sm">
+      <aside
+        className={`
+  fixed md:relative
+  top-0 left-0
+  h-full md:h-auto
+  w-64
+  bg-teal-700 text-white
+  flex flex-col justify-between
+  transform transition-transform duration-300
+  z-50
+  ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}
+  md:translate-x-0
+`}
+      >
 
-              
+        <div>
 
-              <NavItem
-                label="Assessments"
-                active={activeTab === "assessments"}
-                onClick={() => setActiveTab("assessments")}
-              />
-              <NavItem
-                label="Report"
-                active={activeTab === "report"}
-                onClick={() => setActiveTab("report")}
-              />
+          {/* Logo */}
+          <div className="p-6 border-b border-teal-600 flex justify-between items-center">
 
-              <NavItem
-                label="Video"
-                active={activeTab === "video"}
-                onClick={() => setActiveTab("video")}
-              />
+            <div>
+              <h1 className="text-xl font-semibold">Employee Hub</h1>
+              <p className="text-sm text-teal-200">Performance Portal</p>
+            </div>
 
-            </nav>
+            <button
+              className="md:hidden"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <FiX size={22} />
+            </button>
 
           </div>
 
+          {/* Navigation */}
 
-          {/* RIGHT NAV */}
-          <div className="flex items-center gap-4">
+          <nav className="mt-6 space-y-2 px-3">
 
-            {/* <span className="text-sm text-gray-600 hidden sm:block">
-              Role: {user?.role || "Employee"}
-            </span> */}
+            <SidebarItem
+              icon={<FiClipboard />}
+              label="My Assessments"
+              active={activeTab === "assessments"}
+              onClick={() => {
+                setActiveTab("assessments")
+                setSidebarOpen(false)
+              }}
+            />
+
+            <SidebarItem
+              icon={<FiFileText />}
+              label="Reports"
+              active={activeTab === "report"}
+              onClick={() => {
+                setActiveTab("report")
+                setSidebarOpen(false)
+              }}
+            />
+
+            <SidebarItem
+              icon={<FiVideo />}
+              label="Video Resources"
+              active={activeTab === "video"}
+              onClick={() => {
+                setActiveTab("video")
+                setSidebarOpen(false)
+              }}
+            />
+            {/* Logout */}
             <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm text-teal-100 hover:bg-red-600 hover:text-white transition"
+            >
+              <FiLogOut />
+              Logout
+            </button>
+          </nav>
+
+        </div>
+
+        {/* <div className="p-4 border-t border-teal-600">
+
+          <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-        >
-          Logout
-        </button>
-           
+          className="flex items-center gap-2 text-sm hover:text-red-300"
+          >
+
+            <FiLogOut/>
+
+            Logout
+
+          </button>
+
+        </div> */}
+
+      </aside>
+
+
+      {/* ================= MAIN ================= */}
+
+      <div className="flex-1 flex flex-col">
+
+        {/* ================= HEADER ================= */}
+
+        <header className="bg-white shadow-sm px-4 md:px-6 py-4 flex justify-between items-center">
+
+          <div className="flex items-center gap-4">
+
+            {/* BURGER MENU */}
+
+            <button
+              className="md:hidden"
+              onClick={() => setSidebarOpen(true)}
+            >
+              <FiMenu size={24} />
+            </button>
+
+            <div>
+
+              <h2 className="text-xl font-semibold text-gray-800">
+                {pageTitle[activeTab]}
+              </h2>
+
+            </div>
 
           </div>
 
-        </div>
+          <div className="flex items-center gap-6">
 
+            {/* <FaBell className="text-gray-500 text-lg cursor-pointer" /> */}
 
-        {/* MOBILE NAV */}
-        <div className="md:hidden border-t px-4 py-2 flex gap-2 overflow-x-auto">
+            <div className="flex items-center gap-3">
 
-         
-
-          <NavItem
-            label="Assessments"
-            active={activeTab === "assessments"}
-            onClick={() => setActiveTab("assessments")}
-          />
-           <NavItem
-            label="Report"
-            active={activeTab === "report"}
-            onClick={() => setActiveTab("report")}
-          />
-
-          <NavItem
-            label="Video"
-            active={activeTab === "video"}
-            onClick={() => setActiveTab("video")}
-          />
-
-        </div>
-
-      </header>
-
-
-
-      {/* ================= CONTENT ================= */}
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
-
-       
-        {activeTab === "assessments" && <AssessmentsPage />}
- {activeTab === "report" && <Report />}
-        {activeTab === "video" && <Video />}
-      </main>
-
-    </div>
-  );
-}
-
-
-
-/* ================= Report ================= */
-
-function Report() {
-
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState(null);
-
-  useEffect(() => {
-    loadReports();
-  }, []);
-
-  async function loadReports() {
-    try {
-      const res = await fetch("/api/admin/employees/reports");
-      const data = await res.json();
-
-      if (data.ok) setReports(data.reports);
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (loading)
-    return (
-      <div className="text-center py-10 text-gray-500">
-        Loading reports...
-      </div>
-    );
-
-  return (
-
-    <>
-      <div className="bg-white rounded-xl shadow p-6">
-
-        <h3 className="text-lg font-semibold mb-6">
-          My Assessment Reports
-        </h3>
-
-        {reports.length === 0 && (
-          <p className="text-gray-500">
-            No completed assessments yet.
-          </p>
-        )}
-
-        <div className="space-y-4">
-
-          {reports.map((r) => (
-
-            <div
-              key={r.sessionId}
-              className="border rounded-lg p-4 flex items-center justify-between hover:bg-gray-50"
-            >
-
-              <div>
-
-                <p className="font-medium">
-                  {r.title}
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  Role: {r.role}
-                </p>
-
-                <p className="text-sm text-gray-500">
-                  Completed: {new Date(r.completedAt).toLocaleDateString()}
-                </p>
-
+              <div className="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center text-white">
+                {user?.name?.charAt(0) || "U"}
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="">
 
-                {/* <span
-                  className={`font-semibold ${
-                    r.finalScore >= 75
-                      ? "text-green-600"
-                      : r.finalScore >= 50
-                      ? "text-yellow-600"
-                      : "text-red-600"
-                  }`}
-                >
-                  {r.finalScore}%
-                </span> */}
+                <p className="text-sm font-medium">
+                  {user?.name || "Employee"}
+                </p>
 
-                <button
-                  onClick={() => setSelectedSession(r.sessionId)}
-                  className="flex items-center gap-1 text-indigo-600 hover:text-indigo-800"
-                >
-                  <FaEye />
-                  View
-                </button>
+                <p className="text-xs text-gray-500">
+                  {user?.role || ""}
+                </p>
 
               </div>
 
             </div>
+          </div>
 
-          ))}
-
-        </div>
-
-      </div>
+        </header>
 
 
-      {/* MODAL OUTSIDE CONTAINER */}
+        {/* ================= CONTENT ================= */}
 
-      {selectedSession && (
-        <EmployeeReportModal
-          sessionId={selectedSession}
-          onClose={() => setSelectedSession(null)}
-        />
-      )}
+        <main className="p-4 md:p-6 space-y-6">
 
-    </>
-
-  );
-}
+          {/* Stats */}
 
 
-/* ================= KPI ================= */
 
-function Video() {
+          {/* Pages */}
 
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
+          <div className="bg-white rounded-xl shadow p-4">
 
-  useEffect(() => {
-    loadVideos();
-  }, []);
+            {activeTab === "assessments" && <AssessmentsPage />}
 
-  async function loadVideos() {
+            {activeTab === "report" && <Report />}
 
-    try {
-
-      const res = await fetch("/api/admin/employees/reports");
-      const data = await res.json();
-
-      if (data.ok) {
-        setReports(data.reports);
-      }
-
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-
-  }
-
-  if (loading)
-    return (
-      <div className="text-center py-10 text-gray-500">
-        Loading videos...
-      </div>
-    );
-
-  return (
-
-    <div className="space-y-6">
-
-      {reports.length === 0 && (
-        <div className="bg-white rounded-xl shadow p-6 text-gray-500">
-          No videos available yet.
-        </div>
-      )}
-
-      {reports.map((r) => (
-
-        <div
-          key={r.sessionId}
-          className="bg-white rounded-xl shadow p-6"
-        >
-
-          {/* HEADER */}
-
-          <div className="mb-4">
-
-            <h3 className="font-semibold text-lg">
-              {r.role}
-            </h3>
-
-            <p className="text-sm text-gray-500">
-              Completed: {new Date(r.completedAt).toLocaleDateString()}
-            </p>
+            {activeTab === "video" && <Video />}
 
           </div>
 
+        </main>
 
-          {/* VIDEOS */}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-
-            {(r.recommendedVideos || []).map((group, gi) =>
-
-              group.videos.map((v, vi) => (
-
-                <VideoCard
-                  key={`${gi}-${vi}`}
-                  title={v.title}
-                  url={v.url}
-                />
-
-              ))
-
-            )}
-
-          </div>
-
-        </div>
-
-      ))}
+      </div>
 
     </div>
-
   );
-
 }
 
 
 
 /* ================= COMPONENTS ================= */
 
-function NavItem({ label, active, onClick }) {
+function SidebarItem({ icon, label, active, onClick }) {
+
   return (
+
     <button
       onClick={onClick}
-      className={`px-3 py-2 rounded-md text-sm whitespace-nowrap ${
-        active
-          ? "bg-indigo-50 text-indigo-600 font-medium"
-          : "text-gray-600 hover:bg-gray-100"
-      }`}
+      className={`flex items-center gap-3 w-full px-4 py-3 rounded-lg text-sm transition
+    ${active
+          ? "bg-white text-teal-700 font-medium"
+          : "text-teal-100 hover:bg-teal-600"
+        }`}
     >
+
+      {icon}
       {label}
+
     </button>
-  );
+
+  )
 }
 
-function Card({ title, value }) {
-  return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <p className="text-sm text-gray-500">{title}</p>
-      <p className="text-2xl font-bold mt-2">{value}</p>
-    </div>
-  );
-}
-function VideoCard({ title, url }) {
 
-  const videoId = url.includes("watch?v=")
-    ? url.split("watch?v=")[1]
-    : null;
 
-  const thumbnail = videoId
-    ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
-    : null;
-
-  return (
-
-    <div className="border rounded-lg overflow-hidden bg-gray-50 hover:shadow-md transition">
-
-      {thumbnail && (
-        <img
-          src={thumbnail}
-          alt={title}
-          className="w-full h-40 object-cover"
-        />
-      )}
-
-      <div className="p-3">
-
-        <p className="text-sm font-medium line-clamp-2">
-          {title}
-        </p>
-
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-2 text-sm text-indigo-600 hover:text-indigo-800"
-        >
-          Watch Video →
-        </a>
-
-      </div>
-
-    </div>
-
-  );
-
-}

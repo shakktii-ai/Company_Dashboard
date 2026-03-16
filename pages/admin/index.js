@@ -1,13 +1,2205 @@
+// // pages/admin/index.js
+// import { useEffect, useMemo, useState } from "react";
+// import { useRouter } from "next/router";
+// import { IoMdCheckmarkCircleOutline } from "react-icons/io";
+// import { MdLogout } from "react-icons/md";
+// import CompanyProfileModal from "../../components/CompanyProfileModal";
+// import { FiUser } from "react-icons/fi";
+// import jsPDF from "jspdf";
+// import Link from "next/link";
+// import { HiChevronDown } from 'react-icons/hi';
+// export default function AdminIndex() {
+//   const router = useRouter();
+//   const [loggingOut, setLoggingOut] = useState(false);
+
+//   // interviews
+//   const [interviews, setInterviews] = useState([]);
+//   const [loadingInterviews, setLoadingInterviews] = useState(false);
+
+//   // reports
+//   const [reports, setReports] = useState([]);
+//   const [loadingReports, setLoadingReports] = useState(false);
+
+//   // HOD Links
+//   const [hodReviews, setHodReviews] = useState([]);
+//   const [loadingHod, setLoadingHod] = useState(false);
+//   const [copiedToken, setCopiedToken] = useState(null);
+
+//   // UI state
+//   const [activeTab, setActiveTab] = useState("interviews"); // interviews | reports | hod
+//   const [search, setSearch] = useState("");
+//   const [roleFilter, setRoleFilter] = useState("all");
+//   const [recommendFilter, setRecommendFilter] = useState("all");
+//   const [statusFilter, setStatusFilter] = useState("all");
+
+//   // pagination
+//   const [page, setPage] = useState(1);
+//   const pageSize = 12;
+
+//   // create modal
+//   const [showCreate, setShowCreate] = useState(false);
+//   const [errors, setErrors] = useState({});
+//   const [form, setForm] = useState({
+//     jobRole: "",
+//     jd: "",
+//     qualification: "",
+//     criteria: "",
+//     location: "",
+//     questions: {
+//       totalQuestions: 60,
+//       aptitude: 30,
+//       technical: 30,
+
+//     },
+//   });
+
+
+//   // report modal
+//   const [selectedReport, setSelectedReport] = useState(null);
+//   const [showReportModal, setShowReportModal] = useState(false);
+//   const [showCompanyProfile, setShowCompanyProfile] = useState(false);
+//   const [showProfileMenu, setShowProfileMenu] = useState(false);
+//   const [selectedInterviewReport, setSelectedInterviewReport] = useState(null);
+//   const [showInterviewReportModal, setShowInterviewReportModal] = useState(false);
+//   const [showEmployeeSub, setShowEmployeeSub] = useState(false);
+//   const [combinedReport, setCombinedReport] = useState(null);
+//   const [showCombinedModal, setShowCombinedModal] = useState(false);
+//   const [selectedHodReview, setSelectedHodReview] = useState(null);
+//   const [showHodModal, setShowHodModal] = useState(false);
+//   const [showHodLinksListModal, setShowHodLinksListModal] = useState(false);
+//   useEffect(() => {
+//     if (typeof window === "undefined") return;
+
+//     (async () => {
+//       await loadInterviews();
+//       await loadReports();
+//       await loadHodLinks();
+//     })();
+//   }, []);
+
+//   async function loadInterviews() {
+//     console.log("typeof fetch =", typeof fetch);
+//     console.log("fetch value =", fetch);
+//     try {
+//       setLoadingInterviews(true);
+//       const res = await window.fetch("/api/admin/interviews", {
+//         credentials: "include",
+//       });
+
+//       const data = await res.json();
+//       if (data.ok) setInterviews(data.interviews || []);
+//     } catch (err) {
+//       console.error("fetchList error", err);
+//     } finally {
+//       setLoadingInterviews(false);
+//     }
+//   }
+
+//   async function loadReports() {
+//     try {
+//       setLoadingReports(true);
+//       const res = await window.fetch("/api/admin/reports", {
+//         credentials: "include",
+//       });
+
+//       const data = await res.json();
+//       if (data.ok) setReports(data.reports || []);
+//     } catch (err) {
+//       console.error("loadReports error", err);
+//     } finally {
+//       setLoadingReports(false);
+//     }
+//   }
+
+//   async function loadHodLinks() {
+//     try {
+//       setLoadingHod(true);
+//       const res = await window.fetch("/api/admin/hod/get-links", {
+//         credentials: "include",
+//       });
+//       const data = await res.json();
+//       if (data.ok) setHodReviews(data.reviews || []);
+//     } catch (err) {
+//       console.error("loadHodLinks error", err);
+//     } finally {
+//       setLoadingHod(false);
+//     }
+//   }
+
+//   function copyLink(token) {
+//     const url = `${window.location.origin}/admin/hod-form/${token}`;
+//     navigator.clipboard.writeText(url);
+//     setCopiedToken(token);
+//     setTimeout(() => setCopiedToken(null), 2000);
+//   }
+
+//   async function handleLogout() {
+//     try {
+//       setLoggingOut(true);
+//       const res = await window.fetch("/api/admin/logout", {
+//         method: "POST",
+//         credentials: "include",
+//       });
+//       if (res.ok) {
+//         router.push("/admin/login");
+//       }
+//     } catch (err) {
+//       console.error("logout error", err);
+//       setLoggingOut(false);
+//     }
+//   }
+
+//   async function handleCreate(e) {
+//     e.preventDefault();
+
+//     const v = validateForm();
+//     setErrors(v);
+//     if (Object.keys(v).length > 0) return;
+
+//     try {
+//       const payload = {
+//         ...form,
+//         clients: form.clients
+//           ? form.clients.split(",").map(c => c.trim()).filter(Boolean)
+//           : [],
+//       };
+
+//       const res = await fetch("/api/admin/interviews", {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//         credentials: "include",
+//       });
+//       const data = await res.json();
+//       console.log("CREATE RESPONSE:", data);
+
+//       if (data.ok) {
+//         loadInterviews();
+//         setShowCreate(false);
+//         alert("Job created successfully");
+//       } else {
+//         alert("Error creating interview");
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       alert("Error creating interview");
+//     }
+//   }
+
+//   function validateForm() {
+//     let err = {};
+//     if (!form.jobRole.trim()) err.jobRole = "Job role is required";
+//     if (!form.jd.trim()) err.jd = "Job description is required";
+//     if (!form.qualification.trim()) err.qualification = "Qualification is required";
+//     if (!form.criteria.trim()) err.criteria = "Criteria is required";
+//     if (!form.location.trim()) err.location = "Location is required";
+
+
+//     const { aptitude, technical, totalQuestions } = form.questions;
+//     if (aptitude < 1) err.aptitude = "Must be at least 1";
+//     if (technical < 1) err.technical = "Must be at least 1";
+
+
+//     const sum = aptitude + technical;
+//     if (sum !== totalQuestions) err.total = `Total must be ${totalQuestions}, but got ${sum}`;
+//     return err;
+//   }
+
+//   async function toggleActive(id, current) {
+//     try {
+//       await fetch(`/api/admin/interviews/${id}`, {
+//         method: "PATCH",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ isActive: !current }),
+//       });
+//       loadInterviews();
+//     } catch (err) {
+//       console.error("toggleActive error", err);
+//     }
+//   }
+
+//   function openReportModal(report) {
+//     setSelectedReport(report);
+//     setShowReportModal(true);
+//   }
+//   function closeReportModal() {
+//     setSelectedReport(null);
+//     setShowReportModal(false);
+//   }
+
+//   // Derived lists + filtering
+//   const roles = useMemo(() => {
+//     const set = new Set();
+//     interviews.forEach(i => i.jobRole && set.add(i.jobRole));
+//     reports.forEach(r => r.role && set.add(r.role));
+//     return ["all", ...Array.from(set)];
+//   }, [interviews, reports]);
+
+//   const filteredReports = useMemo(() => {
+//     const q = search.trim().toLowerCase();
+//     return reports.filter(r => {
+//       if (roleFilter !== "all" && (r.role || "Unknown") !== roleFilter) return false;
+//       if (recommendFilter !== "all") {
+//         const rec = (r.reportAnalysis?.recommendation || "Report Pending");
+//         if (rec !== recommendFilter) return false;
+//       }
+//       if (statusFilter !== "all") {
+//         const status = r.reportAnalysis ? "done" : "pending";
+//         if (status !== statusFilter) return false;
+//       }
+//       if (!q) return true;
+//       return (r.email || "").toLowerCase().includes(q) || (r.role || "").toLowerCase().includes(q);
+//     });
+//   }, [reports, search, roleFilter, recommendFilter, statusFilter]);
+
+//   const totalPages = Math.max(1, Math.ceil(filteredReports.length / pageSize));
+//   const pageItems = filteredReports.slice((page - 1) * pageSize, page * pageSize);
+
+//   const exportCSV = (list) => {
+//     if (!list.length) return;
+//     const header = ["Email", "Role", "Recommendation", "Answered", "Total", "Date"];
+//     const rows = list.map(r => {
+//       const rec = r.reportAnalysis?.recommendation || "Report Pending";
+//       return [
+//         r.email || "",
+//         r.role || "",
+//         rec,
+//         r.reportAnalysis?.answeredCount || 0,
+//         r.reportAnalysis?.totalQuestions || 0,
+//         new Date(r.createdAt).toLocaleString()
+//       ].map(c => `"${String(c).replace(/"/g, '""')}"`).join(",");
+//     });
+//     const csv = [header.join(","), ...rows].join("\n");
+//     const blob = new Blob([csv], { type: "text/csv" });
+//     const url = URL.createObjectURL(blob);
+//     const a = document.createElement("a");
+//     a.href = url;
+//     a.download = `reports-${new Date().toISOString().slice(0, 10)}.csv`;
+//     a.click();
+//     URL.revokeObjectURL(url);
+//   };
+//   const downloadReportPDF = (report) => {
+//     const doc = new jsPDF();
+//     const pageWidth = doc.internal.pageSize.getWidth();
+//     const pageHeight = doc.internal.pageSize.getHeight();
+//     const margin = 20;
+//     let yPos = margin;
+
+//     // Helper function to add text with word wrap
+//     const addText = (text, x, y, maxWidth, fontSize = 10, isBold = false) => {
+//       doc.setFontSize(fontSize);
+//       doc.setFont("helvetica", isBold ? "bold" : "normal");
+//       const lines = doc.splitTextToSize(text, maxWidth);
+//       doc.text(lines, x, y);
+//       return y + (lines.length * fontSize * 0.5);
+//     };
+
+//     // Header
+//     doc.setFillColor(79, 70, 229); // Indigo
+//     doc.rect(0, 0, pageWidth, 40, 'F');
+//     doc.setTextColor(255, 255, 255);
+//     doc.setFontSize(20);
+//     doc.setFont("helvetica", "bold");
+//     doc.text("Candidate Report", margin, 25);
+
+//     doc.setTextColor(0, 0, 0);
+//     yPos = 50;
+
+//     // Candidate Info
+//     doc.setFontSize(14);
+//     doc.setFont("helvetica", "bold");
+//     doc.text("Candidate Information", margin, yPos);
+//     yPos += 10;
+
+//     doc.setFontSize(10);
+//     doc.setFont("helvetica", "normal");
+//     doc.text(`Email: ${report.email || "N/A"}`, margin, yPos);
+//     yPos += 7;
+//     doc.text(`Role: ${report.role || "N/A"}`, margin, yPos);
+//     yPos += 7;
+//     doc.text(`Date: ${new Date(report.createdAt).toLocaleString()}`, margin, yPos);
+//     yPos += 15;
+
+//     // Recommendation Badge
+//     const recommendation = report.reportAnalysis?.recommendation || "Pending";
+//     doc.setFontSize(12);
+//     doc.setFont("helvetica", "bold");
+//     doc.text("Recommendation:", margin, yPos);
+
+//     // Set color based on recommendation
+//     if (recommendation === "Proceed") {
+//       doc.setTextColor(22, 163, 74); // Green
+//     } else if (recommendation === "Borderline") {
+//       doc.setTextColor(234, 179, 8); // Yellow
+//     } else {
+//       doc.setTextColor(220, 38, 38); // Red
+//     }
+//     doc.text(recommendation, margin + 50, yPos);
+//     doc.setTextColor(0, 0, 0);
+//     yPos += 15;
+
+//     // Role Fit
+//     if (report.reportAnalysis?.roleFit) {
+//       doc.setFontSize(12);
+//       doc.setFont("helvetica", "bold");
+//       doc.text("Role Fit", margin, yPos);
+//       yPos += 7;
+
+//       doc.setFontSize(10);
+//       doc.setFont("helvetica", "normal");
+//       const roleFitText = `${report.reportAnalysis.roleFit.match} - ${report.reportAnalysis.roleFit.explanation}`;
+//       yPos = addText(roleFitText, margin, yPos, pageWidth - 2 * margin);
+//       yPos += 10;
+//     }
+
+//     // Scores
+//     if (report.reportAnalysis?.scores) {
+//       doc.setFontSize(12);
+//       doc.setFont("helvetica", "bold");
+//       doc.text("Scorecard", margin, yPos);
+//       yPos += 10;
+
+//       doc.setFontSize(10);
+//       doc.setFont("helvetica", "normal");
+
+//       Object.entries(report.reportAnalysis.scores).forEach(([key, value]) => {
+//         const label = key.replace(/([A-Z])/g, ' $1').trim();
+//         doc.text(`${label}: ${value}/10`, margin, yPos);
+//         yPos += 7;
+//       });
+
+//       yPos += 5;
+//       doc.setFont("helvetica", "bold");
+//       doc.text(`Overall Score: ${report.reportAnalysis.overallScore || 0} / 60`, margin, yPos);
+//       yPos += 15;
+//     }
+
+//     // Check if we need a new page
+//     if (yPos > pageHeight - 60) {
+//       doc.addPage();
+//       yPos = margin;
+//     }
+
+//     // Evaluation Text
+//     if (report.reportAnalysis?.evaluationText) {
+//       doc.setFontSize(12);
+//       doc.setFont("helvetica", "bold");
+//       doc.text("Detailed Evaluation", margin, yPos);
+//       yPos += 10;
+
+//       Object.entries(report.reportAnalysis.evaluationText).forEach(([key, value]) => {
+//         if (key !== "overallSummary") {
+//           // Check if we need a new page
+//           if (yPos > pageHeight - 40) {
+//             doc.addPage();
+//             yPos = margin;
+//           }
+
+//           doc.setFontSize(11);
+//           doc.setFont("helvetica", "bold");
+//           const sectionTitle = key.replace(/([A-Z])/g, ' $1').trim();
+//           doc.text(sectionTitle, margin, yPos);
+//           yPos += 7;
+
+//           doc.setFontSize(10);
+//           doc.setFont("helvetica", "normal");
+//           yPos = addText(value, margin, yPos, pageWidth - 2 * margin);
+//           yPos += 10;
+//         }
+//       });
+//     }
+
+//     // Overall Summary
+//     if (report.reportAnalysis?.evaluationText?.overallSummary) {
+//       // Check if we need a new page
+//       if (yPos > pageHeight - 60) {
+//         doc.addPage();
+//         yPos = margin;
+//       }
+
+//       doc.setFillColor(219, 234, 254); // Light blue
+//       doc.rect(margin - 5, yPos - 5, pageWidth - 2 * margin + 10, 10, 'F');
+
+//       doc.setFontSize(12);
+//       doc.setFont("helvetica", "bold");
+//       doc.text("Overall Assessment Summary", margin, yPos);
+//       yPos += 10;
+
+//       doc.setFontSize(10);
+//       doc.setFont("helvetica", "normal");
+//       yPos = addText(report.reportAnalysis.evaluationText.overallSummary, margin, yPos, pageWidth - 2 * margin);
+//       yPos += 10;
+//     }
+
+//     // Improvement Resources
+//     if (report.reportAnalysis?.improvementResources) {
+//       // Check if we need a new page
+//       if (yPos > pageHeight - 60) {
+//         doc.addPage();
+//         yPos = margin;
+//       }
+
+//       doc.setFontSize(12);
+//       doc.setFont("helvetica", "bold");
+//       doc.text("Recommended Improvement Areas", margin, yPos);
+//       yPos += 10;
+
+//       doc.setFontSize(10);
+//       doc.setFont("helvetica", "normal");
+
+//       const allResources = Object.values(report.reportAnalysis.improvementResources).flat();
+//       allResources.forEach((item, idx) => {
+//         if (yPos > pageHeight - 20) {
+//           doc.addPage();
+//           yPos = margin;
+//         }
+//         yPos = addText(`• ${item}`, margin, yPos, pageWidth - 2 * margin);
+//         yPos += 5;
+//       });
+//     }
+
+//     // Footer
+//     const totalPagesExp = doc.internal.getNumberOfPages();
+//     for (let i = 1; i <= totalPagesExp; i++) {
+//       doc.setPage(i);
+//       doc.setFontSize(8);
+//       doc.setTextColor(128, 128, 128);
+//       doc.text(
+//         `Page ${i} of ${totalPagesExp}`,
+//         pageWidth / 2,
+//         pageHeight - 10,
+//         { align: 'center' }
+//       );
+//     }
+
+//     // Save the PDF
+//     const fileName = `${report.email?.replace(/[^a-z0-9]/gi, '_')}_report_${new Date().toISOString().slice(0, 10)}.pdf`;
+//     doc.save(fileName);
+//   };
+
+//   const downloadInterviewPDF = (report) => {
+//     const doc = new jsPDF();
+//     const margin = 20;
+//     const pageWidth = doc.internal.pageSize.getWidth();
+//     let y = margin;
+
+//     doc.setFontSize(18);
+//     doc.text("Interview Evaluation Report", margin, y);
+//     y += 15;
+
+//     doc.setFontSize(11);
+//     doc.text(`Email: ${report.email}`, margin, y);
+//     y += 8;
+//     doc.text(`Role: ${report.role}`, margin, y);
+//     y += 15;
+
+//     const lines = doc.splitTextToSize(
+//       report.reportAnalysis || "",
+//       pageWidth - margin * 2
+//     );
+
+//     doc.text(lines, margin, y);
+
+//     doc.save(
+//       `${report.email.replace(/[^a-z0-9]/gi, "_")}_interview_report.pdf`
+//     );
+//   };
+
+//   const downloadFullReportPDF = (assessment, interview) => {
+
+//   const doc = new jsPDF();
+
+//   const pageWidth = doc.internal.pageSize.getWidth();
+//   const pageHeight = doc.internal.pageSize.getHeight();
+//   const margin = 20;
+
+//   let yPos = margin;
+
+//   const addText = (text, x, y, maxWidth) => {
+//     const lines = doc.splitTextToSize(text, maxWidth);
+//     doc.text(lines, x, y);
+//     return y + lines.length * 6;
+//   };
+
+//   /* ================= HEADER ================= */
+
+//   doc.setFontSize(18);
+//   doc.setFont("helvetica","bold");
+
+//   doc.text("Candidate Evaluation Report", margin, yPos);
+
+//   yPos += 10;
+
+//   doc.setFontSize(11);
+//   doc.setFont("helvetica","normal");
+
+//   doc.text(`Email: ${assessment.email}`, margin, yPos);
+//   yPos += 6;
+
+//   doc.text(`Role: ${assessment.role}`, margin, yPos);
+//   yPos += 6;
+
+//   doc.text(`Generated: ${new Date(assessment.createdAt).toLocaleString()}`, margin, yPos);
+//   yPos += 12;
+
+//   /* ================= ASSESSMENT ================= */
+
+//   doc.setFontSize(14);
+//   doc.setFont("helvetica","bold");
+//   doc.text("Assessment Evaluation", margin, yPos);
+//   yPos += 8;
+
+//   doc.setFontSize(11);
+//   doc.setFont("helvetica","normal");
+
+//   const roleFit = assessment.reportAnalysis?.roleFit;
+
+//   if (roleFit) {
+//     yPos = addText(
+//       `Role Fit: ${roleFit.match} - ${roleFit.explanation}`,
+//       margin,
+//       yPos,
+//       pageWidth - margin * 2
+//     );
+//     yPos += 6;
+//   }
+
+//   /* SCORECARD */
+
+//   const scores = assessment.reportAnalysis?.scores || {};
+
+//   Object.entries(scores).forEach(([key,value])=>{
+//     doc.text(
+//       `${key.replace(/([A-Z])/g," $1")}: ${value}/10`,
+//       margin,
+//       yPos
+//     );
+//     yPos += 6;
+//   });
+
+//   yPos += 4;
+
+//   doc.setFont("helvetica","bold");
+
+//   doc.text(
+//     `Overall Score: ${assessment.reportAnalysis?.overallScore || 0} / 60`,
+//     margin,
+//     yPos
+//   );
+
+//   yPos += 10;
+
+//   /* SECTION EVALUATION */
+
+//   const sections = assessment.reportAnalysis?.evaluationText || {};
+
+//   Object.entries(sections).forEach(([key,value])=>{
+
+//     if(key === "overallSummary") return;
+
+//     doc.setFont("helvetica","bold");
+
+//     doc.text(
+//       key.replace(/([A-Z])/g," $1"),
+//       margin,
+//       yPos
+//     );
+
+//     yPos += 6;
+
+//     doc.setFont("helvetica","normal");
+
+//     yPos = addText(
+//       value,
+//       margin,
+//       yPos,
+//       pageWidth - margin * 2
+//     );
+
+//     yPos += 6;
+
+//   });
+
+//   if (sections.overallSummary) {
+
+//     doc.setFont("helvetica","bold");
+
+//     doc.text("Overall Assessment Summary", margin, yPos);
+
+//     yPos += 6;
+
+//     doc.setFont("helvetica","normal");
+
+//     yPos = addText(
+//       sections.overallSummary,
+//       margin,
+//       yPos,
+//       pageWidth - margin * 2
+//     );
+
+//     yPos += 10;
+//   }
+
+//   /* ================= INTERVIEW ================= */
+
+//   if (interview?.reportAnalysis) {
+
+//     if (yPos > pageHeight - 40) {
+//       doc.addPage();
+//       yPos = margin;
+//     }
+
+//     doc.setFontSize(14);
+//     doc.setFont("helvetica","bold");
+
+//     doc.text("Interview Evaluation", margin, yPos);
+
+//     yPos += 8;
+
+//     doc.setFontSize(11);
+//     doc.setFont("helvetica","normal");
+
+//     yPos = addText(
+//       interview.reportAnalysis,
+//       margin,
+//       yPos,
+//       pageWidth - margin * 2
+//     );
+//   }
+
+//   /* ================= SAVE ================= */
+
+//   const fileName =
+//     `${assessment.email.replace(/[^a-z0-9]/gi,"_")}_full_report.pdf`;
+
+//   doc.save(fileName);
+
+// };
+//   async function openInterviewReport(email, role) {
+//     try {
+//       const res = await fetch(
+//         `/api/admin/interview-reports?email=${email}&role=${role}`,
+//         { credentials: "include" }
+//       );
+
+//       const data = await res.json();
+
+//       if (data.ok && data.report) {
+//         setSelectedInterviewReport(data.report);
+//         setShowInterviewReportModal(true);
+//       } else {
+//         alert("Interview report not found");
+//       }
+//     } catch (err) {
+//       console.error(err);
+//       alert("Error loading interview report");
+//     }
+//   }
+//   async function openCombinedReport(report) {
+//     try {
+//       const res = await fetch(
+//         `/api/admin/interview-reports?email=${report.email}&role=${report.role}`,
+//         { credentials: "include" }
+//       );
+
+//       const data = await res.json();
+
+//       setCombinedReport({
+//         assessment: report,
+//         interview: data.report || null,
+//       });
+
+//       setShowCombinedModal(true);
+
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   }
+//   return (
+//     <div className="min-h-screen bg-gray-50 p-6 md:p-10">
+//       <div className="max-w-7xl mx-auto">
+
+//         {/* header */}
+//         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+//           <div>
+//             <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Company Dashboard</h1>
+//             <p className="text-sm text-gray-600 mt-1">Manage interviews, view AI reports and shortlist candidates.</p>
+//           </div>
+
+//           <div className="flex items-center gap-3">
+
+//             <div>
+//               {/* <button
+//                 onClick={() => setShowCreate(true)}
+//                 className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700"
+//               >
+//                 + Create Interview
+//               </button> */}
+//               {/* <button
+//     onClick={() => router.push("/admin/employees")}
+//     className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+//   >
+//     Employees
+//   </button> */}
+//             </div>
+
+//             {/* Profile Dropdown */}
+//             <div className="relative">
+//               <button
+//                 onClick={() => setShowProfileMenu(p => !p)}
+//                 className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center border border-black"
+//               >
+//                 <FiUser size={18} />
+//               </button>
+
+//               {showProfileMenu && (
+//                 <>
+//                   {/* click outside overlay */}
+//                   <div
+//                     className="fixed inset-0 z-40"
+//                     onClick={() => setShowProfileMenu(false)}
+//                   />
+
+//                   {/* dropdown */}
+
+
+//                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
+
+//                     {/* Profile */}
+//                     {/* <button
+//     onClick={() => {
+//       setShowCompanyProfile(true);
+//       setShowProfileMenu(false);
+//     }}
+//     className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+//   >
+//     Profile
+//   </button> */}
+//                     <button
+//                       onClick={() => setShowCreate(true)}
+//                       className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+//                     >
+//                       Create Interview
+//                     </button>
+//                     {/* Employee with Submenu */}
+//                     <div className="relative">
+
+//                       <button
+//                         onClick={() => setShowEmployeeSub(!showEmployeeSub)}
+//                         className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
+//                       >
+//                         Manage Employee
+//                         <HiChevronDown />
+//                       </button>
+
+//                       {showEmployeeSub && (
+//                         <div className="ml-2 border-l bg-gray-50">
+
+//                           <Link
+//                             href="/admin/employees"
+//                             className="block px-4 py-2 text-sm hover:bg-gray-100"
+//                           >
+//                             Add Employee
+//                           </Link>
+
+//                           <Link
+//                             href="/admin/employee-assessments"
+//                             className="block px-4 py-2 text-sm hover:bg-gray-100"
+//                           >
+//                             Create Assessment
+//                           </Link>
+
+//                         </div>
+//                       )}
+//                     </div>
+
+//                     {/* HOD Links - standalone item */}
+//                     <button
+//                       onClick={() => {
+//                         loadHodLinks();
+//                         setShowHodLinksListModal(true);
+//                         setShowProfileMenu(false);
+//                         setShowEmployeeSub(false);
+//                       }}
+//                       className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+//                     >
+//                       HOD Links
+//                     </button>
+
+//                     {/* Logout */}
+//                     <button
+//                       onClick={handleLogout}
+//                       disabled={loggingOut}
+//                       className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+//                     >
+//                       Logout
+//                     </button>
+
+//                   </div>
+//                 </>
+//               )}
+//             </div>
+
+//           </div>
+//         </div>
+
+//         {/* tabs + filters */}
+//         <div className="bg-white rounded-lg shadow p-4 mb-6">
+//           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+//             <div className="flex items-center gap-3">
+//               <div className="flex items-center gap-1 bg-gray-100 rounded-md p-1">
+//                 <button
+//                   onClick={() => setActiveTab("interviews")}
+//                   className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "interviews" ? "bg-white text-gray-900 shadow" : "text-gray-600"}`}
+//                 >
+//                   Interviews
+//                 </button>
+//                 <button
+//                   onClick={() => setActiveTab("reports")}
+//                   className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "reports" ? "bg-white text-gray-900 shadow" : "text-gray-600"}`}
+//                 >
+//                   Reports
+//                 </button>
+//               </div>
+
+//               <div className="hidden sm:flex items-center gap-2">
+//                 <input
+//                   value={search}
+//                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+//                   placeholder="Search email or role"
+//                   className="px-3 py-2 border rounded-md text-sm w-52 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+//                 />
+//                 <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
+//                   {roles.map(r => <option key={r} value={r}>{r === "all" ? "All roles" : r}</option>)}
+//                 </select>
+//                 {/* <select value={recommendFilter} onChange={(e) => setRecommendFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
+//                   <option value="all">Any recommendation</option>
+//                   <option value="Proceed">Proceed</option>
+//                   <option value="Borderline">Borderline</option>
+//                   <option value="Cannot Proceed">Cannot Proceed</option>
+//                 </select> */}
+
+//               </div>
+//             </div>
+
+//             <div className="flex items-center gap-3">
+//               <div className="text-sm text-gray-600">Showing <span className="font-medium">{filteredReports.length}</span> reports</div>
+
+//             </div>
+//           </div>
+
+//           {/* responsive small controls */}
+//           <div className="mt-3 sm:hidden flex gap-2">
+//             <input
+//               value={search}
+//               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+//               placeholder="Search email or role"
+//               className="px-3 py-2 border rounded-md text-sm w-full"
+//             />
+//           </div>
+//         </div>
+
+//         {/* content */}
+//         <div >
+//           <div>
+//             {/* ⭐ SHOW INTERVIEWS ONLY IF TAB = interviews */}
+//             {activeTab === "interviews" && (
+//               <div className="lg:col-span-7">
+
+//                 <div className="bg-white rounded-lg shadow p-4">
+//                   <div className="flex items-center justify-between mb-3">
+//                     <h3 className="text-lg font-medium">Interviews</h3>
+//                     <div className="text-sm text-gray-500">{loadingInterviews ? "Loading..." : `${interviews.length} created`}</div>
+//                   </div>
+
+//                   {/* responsive cards */}
+//                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                     {interviews.map(iv => (
+//                       <div key={iv._id} className="p-4 border rounded-lg bg-white shadow-sm">
+//                         <div className="">
+//                           <div>
+//                             <div className="flex items-center justify-between mt-3 gap-3">
+
+//                               {/* Left: Status Badge */}
+//                               <div
+//                                 className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${iv.isActive
+//                                   ? "bg-green-50 text-green-700"
+//                                   : "bg-gray-100 text-gray-600"
+//                                   }`}
+//                               >
+//                                 {iv.isActive ? "Active" : "Inactive"}
+//                               </div>
+
+//                               {/* Right: Toggle Button */}
+//                               <button
+//                                 onClick={() => toggleActive(iv._id, iv.isActive)}
+//                                 className="text-sm px-3 py-1 bg-yellow-200 rounded"
+//                               >
+//                                 Toggle
+//                               </button>
+
+//                             </div>
+//                             <div className="text-base font-semibold text-gray-900">{iv.jobRole || "Untitled Role"}</div>
+//                             <div className="text-sm text-gray-500 mt-1">{iv.jd ? iv.jd.slice(0, 300) + (iv.jd.length > 300 ? "…" : "") : "No job description"}</div>
+//                             <div className="text-sm text-gray-500 mt-1">Qualification: {iv.qualification}</div>
+//                             <div className="text-sm text-gray-500 mt-1">Criteria: {iv.criteria}</div>
+//                             <div className="text-sm text-gray-500 mt-1">Location: {iv.location}</div>
+//                             <div className="mt-2 text-xs text-gray-400">{new Date(iv.createdAt).toLocaleString()}</div>
+//                           </div>
+//                           <div className="">
+
+//                             <div className="mt-3 flex flex-col gap-2">
+//                               <a
+//                                 href={`/interview/${iv.slug}/apply`}
+//                                 target="_blank"
+//                                 rel="noreferrer"
+//                                 className="text-blue-600 text-sm underline break-all"
+//                               >
+//                                 /interview/{iv.slug}/apply
+//                               </a>
+
+
+//                             </div>
+//                           </div>
+//                         </div>
+//                       </div>
+//                     ))}
+//                   </div>
+
+//                   {/* fallback */}
+//                   {interviews.length === 0 && !loadingInterviews && (
+//                     <div className="text-center text-gray-500 p-8">No interviews created yet.</div>
+//                   )}
+//                 </div>
+//               </div>
+//             )}
+
+
+//             {/* ⭐ HOD LINKS TAB REMOVED (NOW A MODAL) */}
+
+//             {/* ⭐ SHOW REPORTS ONLY IF TAB = reports */}
+//             {activeTab === "reports" && (
+//               <div className="lg:col-span-5">
+
+//                 <div className="bg-white rounded-lg shadow p-4">
+//                   <div className="flex items-center justify-between mb-3">
+//                     <h3 className="text-lg font-medium">Candidate Reports</h3>
+//                     <div className="text-sm text-gray-500">{loadingReports ? "Loading..." : `${reports.length} total`}</div>
+//                   </div>
+
+//                   {/* small summary badges */}
+//                   {/* <div className="flex flex-wrap gap-2 mb-4">
+//                     <div className="px-3 py-1 bg-green-50 text-green-800 rounded-full text-sm">Proceed: {reports.filter(r => r.reportAnalysis?.recommendation === "Proceed").length}</div>
+//                     <div className="px-3 py-1 bg-yellow-50 text-yellow-800 rounded-full text-sm">Borderline: {reports.filter(r => r.reportAnalysis?.recommendation === "Borderline").length}</div>
+//                     <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Pending: {reports.filter(r => !r.reportAnalysis).length}</div>
+//                   </div> */}
+
+//                   {/* reports table (responsive) */}
+//                   <div className="overflow-x-auto">
+//                     <table className="min-w-full text-sm">
+//                       <thead>
+//                         <tr className="text-left text-xs text-gray-500">
+//                           <th className="py-2 pr-4">Email</th>
+//                           <th className="py-2 pr-4">Role</th>
+//                           {/* <th className="py-2 pr-4">Recommendation</th> */}
+//                           <th className="py-2 pr-4">Date</th>
+//                           <th className="py-2 pr-4">Report</th>
+//                         </tr>
+//                       </thead>
+//                       <tbody>
+//                         {pageItems.length === 0 && (
+//                           <tr>
+//                             <td colSpan="5" className="py-6 text-center text-gray-400">No reports match your filters</td>
+//                           </tr>
+//                         )}
+//                         {pageItems.map(r => (
+//                           <tr key={r._id} className="border-t">
+//                             <td className="py-3 pr-4">{r.email}</td>
+//                             <td className="py-3 pr-4">{r.role}</td>
+//                             {/* <td className="py-3 pr-4">
+//                               <span className={`px-2 py-1 rounded-full text-xs ${r.reportAnalysis?.recommendation === "Proceed" ? "bg-green-50 text-green-700" : r.reportAnalysis?.recommendation === "Borderline" ? "bg-yellow-50 text-yellow-700" : "bg-gray-100 text-gray-800"}`}>
+//                                 {r.reportAnalysis?.recommendation || "Pending"}
+//                               </span>
+//                             </td> */}
+//                             <td className="py-3 pr-4">{new Date(r.createdAt).toLocaleString()}</td>
+//                             <td className="py-3 pr-4">
+//                               <div className="flex gap-2">
+//                                 {/* <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
+//                                 <button
+//                                   onClick={() => openInterviewReport(r.email, r.role)}
+//                                   className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
+//                                 >
+//                                   Interview
+
+
+//                                 </button> */}
+//                                 <button
+//                                   onClick={() => openCombinedReport(r)}
+//                                   className="px-3 py-1 bg-indigo-600 text-white rounded text-sm"
+//                                 >
+//                                   View
+//                                 </button>
+//                               </div>
+//                             </td>
+//                             <td className="py-3 pr-4">
+//                               {r.shortlisted && (
+//                                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+//                                   <IoMdCheckmarkCircleOutline className="text-sm" />
+//                                   Shortlisted
+//                                 </span>
+
+//                               )
+//                               }
+//                             </td>
+
+
+//                           </tr>
+//                         ))}
+//                       </tbody>
+//                     </table>
+//                   </div>
+
+//                   {/* pagination */}
+//                   <div className="mt-4 flex items-center justify-between">
+//                     <div className="text-sm text-gray-600">Page {page} / {totalPages}</div>
+//                     <div className="flex gap-2">
+//                       <button onClick={() => setPage(p => Math.max(1, p - 1))} className="px-3 py-1 bg-white border rounded">Prev</button>
+//                       <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="px-3 py-1 bg-white border rounded">Next</button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               </div>
+
+//             )}
+//           </div>
+//         </div>
+//         <CompanyProfileModal
+//           open={showCompanyProfile}
+//           onClose={() => setShowCompanyProfile(false)}
+//         />
+
+//         {/* Create Modal */}
+//         {showCreate && (
+//           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
+//             <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[90vh]">
+
+//               {/* Header */}
+//               <div className="flex items-center justify-between border-b px-6 py-4">
+//                 <h3 className="text-xl font-semibold text-gray-800">
+//                   Create Interview
+//                 </h3>
+
+//                 <button
+//                   onClick={() => setShowCreate(false)}
+//                   className="text-gray-500 hover:text-gray-700 text-lg"
+//                 >
+//                   ✕
+//                 </button>
+//               </div>
+
+//               {/* Form */}
+//               <form
+//                 onSubmit={handleCreate}
+//                 className="p-6 overflow-y-auto space-y-5 flex-1"
+//               >
+
+//                 {/* Job Role */}
+//                 <div>
+//                   <label className="text-sm font-medium text-gray-700">Job Role</label>
+//                   <input
+//                     value={form.jobRole}
+//                     onChange={(e) =>
+//                       setForm({ ...form, jobRole: e.target.value })
+//                     }
+//                     className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   />
+//                   {errors.jobRole && (
+//                     <div className="text-xs text-red-600 mt-1">
+//                       {errors.jobRole}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Job Description */}
+//                 <div>
+//                   <label className="text-sm font-medium text-gray-700">
+//                     Job Description
+//                   </label>
+//                   <textarea
+//                     value={form.jd}
+//                     onChange={(e) =>
+//                       setForm({ ...form, jd: e.target.value })
+//                     }
+//                     rows={4}
+//                     className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   />
+//                   {errors.jd && (
+//                     <div className="text-xs text-red-600 mt-1">
+//                       {errors.jd}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Qualification */}
+//                 <div>
+//                   <label className="text-sm font-medium text-gray-700">
+//                     Qualification
+//                   </label>
+//                   <input
+//                     value={form.qualification}
+//                     onChange={(e) =>
+//                       setForm({ ...form, qualification: e.target.value })
+//                     }
+//                     className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   />
+//                   {errors.qualification && (
+//                     <div className="text-xs text-red-600 mt-1">
+//                       {errors.qualification}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Criteria */}
+//                 <div>
+//                   <label className="text-sm font-medium text-gray-700">
+//                     Criteria
+//                   </label>
+//                   <input
+//                     value={form.criteria}
+//                     onChange={(e) =>
+//                       setForm({ ...form, criteria: e.target.value })
+//                     }
+//                     className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                   />
+//                   {errors.criteria && (
+//                     <div className="text-xs text-red-600 mt-1">
+//                       {errors.criteria}
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 {/* Location */}
+//                 <div>
+//                   <label className="text-sm font-medium text-gray-700">
+//                     Location
+//                   </label>
+//                   <input
+//                     value={form.location}
+//                     onChange={(e) =>
+//                       setForm({ ...form, location: e.target.value })
+//                     }
+//                     className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                     placeholder="Bangalore, Pune, Noida"
+//                   />
+//                   {errors.location && (
+//                     <p className="text-xs text-red-600 mt-1">
+//                       {errors.location}
+//                     </p>
+//                   )}
+//                 </div>
+
+//                 {/* Questions */}
+//                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                   <div>
+//                     <label className="text-sm font-medium text-gray-700">
+//                       Aptitude
+//                     </label>
+//                     <input
+//                       type="number"
+//                       value={form.questions.aptitude}
+//                       onChange={(e) =>
+//                         setForm({
+//                           ...form,
+//                           questions: {
+//                             ...form.questions,
+//                             aptitude: Number(e.target.value),
+//                           },
+//                         })
+//                       }
+//                       className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                     />
+//                     {errors.aptitude && (
+//                       <div className="text-xs text-red-600 mt-1">
+//                         {errors.aptitude}
+//                       </div>
+//                     )}
+//                   </div>
+
+//                   <div>
+//                     <label className="text-sm font-medium text-gray-700">
+//                       Technical
+//                     </label>
+//                     <input
+//                       type="number"
+//                       value={form.questions.technical}
+//                       onChange={(e) =>
+//                         setForm({
+//                           ...form,
+//                           questions: {
+//                             ...form.questions,
+//                             technical: Number(e.target.value),
+//                           },
+//                         })
+//                       }
+//                       className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
+//                     />
+//                     {errors.technical && (
+//                       <div className="text-xs text-red-600 mt-1">
+//                         {errors.technical}
+//                       </div>
+//                     )}
+//                   </div>
+//                 </div>
+
+//                 {errors.total && (
+//                   <div className="text-sm text-red-700">
+//                     {errors.total}
+//                   </div>
+//                 )}
+
+//                 {/* Footer Buttons */}
+//                 <div className="flex items-center justify-end gap-3 pt-4 border-t">
+//                   <button
+//                     type="button"
+//                     onClick={() => setShowCreate(false)}
+//                     className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
+//                   >
+//                     Cancel
+//                   </button>
+
+//                   <button
+//                     type="submit"
+//                     className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow"
+//                   >
+//                     Create Interview
+//                   </button>
+//                 </div>
+//               </form>
+//             </div>
+//           </div>)}
+
+//         {/* Report Modal */}
+//         {showCombinedModal && combinedReport && (() => {
+
+//           const assessment = combinedReport.assessment;
+//           const interview = combinedReport.interview;
+
+//           const text = interview?.reportAnalysis || "";
+
+//           const scoreRegex =
+//             /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
+
+//           const scores = [];
+//           let match;
+
+//           while ((match = scoreRegex.exec(text)) !== null) {
+//             scores.push({
+//               label: match[1].replace(/\s+/g, " ").trim(),
+//               value: Number(match[2])
+//             });
+//           }
+
+//           const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
+//           const overallMatch = text.match(overallRegex);
+
+//           const overallScore = overallMatch ? Number(overallMatch[1]) : 0;
+//           const overallTotal = overallMatch ? Number(overallMatch[2]) : 50;
+
+//           const improvementRegex = /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
+
+//           const improvementMatch = text.match(improvementRegex);
+
+//           const improvementText = improvementMatch ? improvementMatch[1].trim() : null;
+
+//           const mainText = improvementMatch
+//             ? text.replace(improvementRegex, "").trim()
+//             : text;
+
+// // Assessment score out of 60
+// const assessmentScore = assessment?.reportAnalysis?.overallScore || 0;
+
+// // Interview score
+// const interviewScore = overallScore || 0;
+
+// // Normalize scores safely
+// const assessmentPercent = (assessmentScore / 60) * 100;
+
+// let interviewPercent = 0;
+
+// if (interview && overallTotal > 0) {
+//   interviewPercent = (interviewScore / overallTotal) * 100;
+// }
+
+// // Weighted score
+// let finalScore;
+
+// if (interview) {
+//   // Assessment 60% + Interview 40%
+//   finalScore = (assessmentPercent * 0.6) + (interviewPercent * 0.4);
+// } else {
+//   // If interview not available use only assessment
+//   finalScore = assessmentPercent;
+// }
+
+// let finalRecommendation = "Borderline";
+
+// if (finalScore >= 70) {
+//   finalRecommendation = "Proceed";
+// } else if (finalScore >= 50) {
+//   finalRecommendation = "Borderline";
+// } else {
+//   finalRecommendation = "Reject";
+// }
+
+//           return (
+
+//             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+
+//               <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
+
+//                 <button
+//                   onClick={() => setShowCombinedModal(false)}
+//                   className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
+//                 >
+//                   ✕
+//                 </button>
+
+//                 {/* HEADER */}
+
+//                 <div className="border-b pb-6 mb-6 flex justify-between items-center">
+
+//                   <div>
+//                     <h2 className="text-2xl font-semibold text-gray-900">
+//                       {assessment.email}
+//                     </h2>
+
+//                     <p className="text-sm text-gray-600">
+//                       Role: {assessment.role}
+//                     </p>
+
+//                     <p className="text-xs text-gray-400 mt-1">
+//                       Generated on {new Date(assessment.createdAt).toLocaleString()}
+//                     </p>
+//                   </div>
+
+//                   {/* <span
+//                     className={`px-4 py-2 rounded-full text-sm font-semibold
+// ${finalRecommendation === "Proceed"
+//                         ? "bg-green-100 text-green-700"
+//                         : finalRecommendation === "Borderline"
+//                           ? "bg-yellow-100 text-yellow-700"
+//                           : "bg-red-100 text-red-700"}
+// `}
+//                   >
+//                     {finalRecommendation}
+//                   </span> */}
+
+//                 </div>
+
+//                 {/* SCORE SUMMARY */}
+
+//                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+//   <div className="p-4 bg-indigo-50 rounded-lg border">
+//     <p className="text-sm text-gray-600">Assessment Score</p>
+//     <p className="text-2xl font-bold text-indigo-700">
+//       {assessmentScore}/60
+//     </p>
+//   </div>
+
+//   <div className="p-4 bg-green-50 rounded-lg border">
+//     <p className="text-sm text-gray-600">Interview Score</p>
+//     <p className="text-2xl font-bold text-green-700">
+//       {interviewScore}/{overallTotal}
+//     </p>
+//   </div>
+
+//   <div className="p-4 bg-gray-100 rounded-lg border">
+//     <p className="text-sm text-gray-600">Weighted Score</p>
+//     <p className="text-2xl font-bold">
+//       {finalScore.toFixed(1)}%
+//     </p>
+//   </div>
+
+//   <div className="p-4 bg-gray-50 rounded-lg border">
+//     <p className="text-sm text-gray-600">Final Decision</p>
+//     <p className="text-xl font-semibold">
+//       {finalRecommendation}
+//     </p>
+//   </div>
+
+// </div>
+//                 {/* ================= ASSESSMENT ================= */}
+
+//                 <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-indigo-500 pl-3 mb-4">
+//                   Assessment Evaluation
+//                 </h3>
+
+//                 {/* <div className="p-5 border bg-gray-50 rounded-lg">
+
+//                   <p className="text-sm text-gray-700 leading-relaxed">
+
+//                     <strong>Role Fit:</strong>{" "}
+//                     {assessment.reportAnalysis?.roleFit?.match} —{" "}
+//                     {assessment.reportAnalysis?.roleFit?.explanation}
+
+//                   </p>
+
+//                 </div> */}
+
+//                 {/* SCORECARDS */}
+
+//                 <div className="mt-8">
+
+               
+
+//                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+//                     {Object.entries(assessment.reportAnalysis?.scores || {}).map(
+//                       ([key, value]) => (
+
+//                         <div key={key} className="p-4 border rounded-lg shadow-sm">
+
+//                           <div className="text-sm text-gray-600 capitalize">
+//                             {key.replace(/([A-Z])/g, " $1")}
+//                           </div>
+
+//                           <div className="mt-2 text-2xl font-bold">
+//                             {value}/10
+//                           </div>
+
+//                         </div>
+
+//                       ))}
+
+//                   </div>
+
+//                   <p className="text-sm text-gray-500 mt-3">
+
+//                     Overall Score:
+//                     <strong> {assessmentScore} / 60</strong>
+
+//                   </p>
+
+//                 </div>
+
+//                 {/* SECTION EVALUATION */}
+
+//                 <div className="mt-8 space-y-4">
+
+//                   {Object.entries(
+//                     assessment.reportAnalysis?.evaluationText || {}
+//                   ).map(([key, value]) =>
+
+//                     key !== "overallSummary" && (
+
+//                       <div
+//                         key={key}
+//                         className="p-4 border rounded-lg bg-white shadow-sm"
+//                       >
+
+//                         <div className="font-medium text-gray-900 capitalize">
+//                           {key.replace(/([A-Z])/g, " $1")}
+//                         </div>
+
+//                         <p className="text-sm text-gray-700 mt-1">
+//                           {value}
+//                         </p>
+
+//                       </div>
+
+//                     )
+
+//                   )}
+
+//                 </div>
+
+//                 {/* SUMMARY */}
+
+//                 <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+
+//                   <h3 className="text-lg font-semibold text-blue-800">
+//                     Overall Assessment Summary
+//                   </h3>
+
+//                   <p className="text-sm text-blue-900 mt-2 leading-relaxed">
+//                     {assessment.reportAnalysis?.evaluationText?.overallSummary}
+//                   </p>
+
+//                 </div>
+
+//                 {/* ================= INTERVIEW ================= */}
+
+//                 {interview && (
+
+//                   <>
+
+//                     <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mt-10 mb-4">
+//                       Interview Evaluation
+//                     </h3>
+
+//                     {/* INTERVIEW SCORECARDS */}
+
+//                     {scores.length > 0 && (
+
+//                       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+//                         {scores.map((s, i) => (
+
+//                           <div
+//                             key={i}
+//                             className="p-4 border rounded-lg shadow-sm"
+//                           >
+
+//                             <div className="text-sm text-gray-600">
+//                               {s.label}
+//                             </div>
+
+//                             <div className="text-2xl font-bold">
+//                               {s.value}/10
+//                             </div>
+
+//                           </div>
+
+//                         ))}
+
+//                       </div>
+
+//                     )}
+
+//                     {overallScore > 0 && (
+
+//                       <p className="text-sm text-gray-600 mt-3">
+
+//                         <strong>Overall Score:</strong> {overallScore} / {overallTotal}
+
+//                       </p>
+
+//                     )}
+
+//                     {/* INTERVIEW ANALYSIS */}
+
+//                     <div className="mt-8">
+
+//                       <h3 className="text-lg font-semibold mb-3">
+//                         Detailed Evaluation
+//                       </h3>
+
+//                       <div className="text-sm text-gray-700 whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
+//                         {mainText}
+//                       </div>
+
+//                     </div>
+
+//                     {/* IMPROVEMENTS */}
+
+//                     {improvementText && (
+
+//                       <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+
+//                         <h3 className="text-lg font-semibold text-blue-800 mb-3">
+//                           Improvement Suggestions
+//                         </h3>
+
+//                         <div className="text-sm text-blue-900 whitespace-pre-wrap">
+//                           {improvementText}
+//                         </div>
+
+//                       </div>
+
+//                     )}
+
+//                   </>
+
+//                 )}
+
+
+
+//                 {/* ACTIONS */}
+
+//                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-10 border-t pt-6">
+
+// {/* LEFT SIDE ACTIONS */}
+
+//   <div className="flex gap-3">
+
+// <button
+//   onClick={()=>downloadFullReportPDF(assessment, interview)}
+//   className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition"
+// >
+//   Download Report
+// </button>
+// <button
+//   onClick={async () => {
+
+//     const newStatus = !assessment.shortlisted;
+
+//     const res = await fetch(
+//       `/api/admin/reports/${assessment._id}`,
+//       {
+//         method: "PATCH",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify({ shortlisted: newStatus })
+//       }
+//     );
+
+//     const data = await res.json();
+
+//     if (data.ok) {
+//       setShowCombinedModal(false);
+//       loadReports();
+//     }
+
+//   }}
+//   className={`px-5 py-2 rounded-md text-white font-medium transition
+//   ${assessment.shortlisted
+//     ? "bg-red-600 hover:bg-red-700"
+//     : "bg-green-600 hover:bg-green-700"}
+//   `}
+// >
+//   {assessment.shortlisted
+//     ? "Remove from Shortlist"
+//     : "Shortlist"}
+// </button>
+
+
+
+
+//   </div>
+
+// {/* RIGHT SIDE ACTION */}
+
+//   <div>
+//     <button
+//   onClick={() => setShowCombinedModal(false)}
+//   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium transition"
+// >
+//   Close
+// </button>
+
+
+//   </div>
+
+// </div>
+
+//               </div>
+//             </div>
+
+//           );
+
+//         })()}
+//         {showReportModal && selectedReport && (
+//           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+//             <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
+
+//               {/* Close */}
+//               <button
+//                 onClick={closeReportModal}
+//                 className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
+//               >
+//                 ✕
+//               </button>
+
+//               {/* ================= HEADER ================= */}
+//               <div className="border-b pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+//                 <div>
+//                   <h2 className="text-2xl font-semibold text-gray-900">
+//                     {selectedReport.email}
+//                   </h2>
+//                   <p className="text-sm text-gray-600">{selectedReport.role}</p>
+//                   <p className="text-xs text-gray-400 mt-1">
+//                     Report generated on{" "}
+//                     {new Date(selectedReport.createdAt).toLocaleString()}
+//                   </p>
+//                 </div>
+
+//                 {/* Recommendation Badge */}
+//                 {/* <div>
+//                   <span
+//                     className={`px-4 py-2 rounded-full text-sm font-semibold
+//               ${selectedReport.reportAnalysis?.recommendation === "Proceed"
+//                         ? "bg-green-100 text-green-700"
+//                         : selectedReport.reportAnalysis?.recommendation === "Borderline"
+//                           ? "bg-yellow-100 text-yellow-700"
+//                           : "bg-red-100 text-red-700"}
+//             `}
+//                   >
+//                     {selectedReport.reportAnalysis?.recommendation}
+//                   </span>
+//                 </div> */}
+//               </div>
+
+//               {/* ================= HIRING VERDICT ================= */}
+//               <div className="mt-6 p-5 rounded-lg border bg-gray-50">
+
+//                 <p className="text-sm text-gray-700 leading-relaxed">
+//                   <strong>Role Fit:</strong>{" "}
+//                   {selectedReport.reportAnalysis?.roleFit?.match} —{" "}
+//                   {selectedReport.reportAnalysis?.roleFit?.explanation}
+//                 </p>
+//               </div>
+
+//               {/* ================= SCORECARD ================= */}
+//               <div className="mt-8">
+//                 <h3 className="text-lg font-semibold mb-4 text-gray-800">
+//                   Candidate Scorecard
+//                 </h3>
+
+//                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+//                   {Object.entries(selectedReport.reportAnalysis?.scores || {}).map(
+//                     ([key, value]) => (
+//                       <div
+//                         key={key}
+//                         className="p-4 rounded-lg border bg-white shadow-sm"
+//                       >
+//                         <div className="text-sm font-medium text-gray-600 capitalize">
+//                           {key.replace(/([A-Z])/g, " $1")}
+//                         </div>
+
+//                         <div className="mt-2 flex items-center justify-between">
+//                           <div className="text-2xl font-bold text-gray-900">
+//                             {value}/10
+//                           </div>
+//                           <div className="w-24 h-2 bg-gray-200 rounded-full">
+//                             <div
+//                               className={`h-full rounded-full ${value >= 7
+//                                 ? "bg-green-500"
+//                                 : value >= 4
+//                                   ? "bg-yellow-500"
+//                                   : "bg-red-500"
+//                                 }`}
+//                               style={{ width: `${(value / 10) * 100}%` }}
+//                             />
+//                           </div>
+//                         </div>
+//                       </div>
+//                     )
+//                   )}
+//                 </div>
+
+//                 <p className="text-sm text-gray-500 mt-3">
+//                   Overall Score:{" "}
+//                   <strong>
+//                     {selectedReport.reportAnalysis?.overallScore} / 60
+//                   </strong>
+//                 </p>
+//               </div>
+
+//               {/* ================= DETAILED EVALUATION ================= */}
+//               <div className="mt-8">
+//                 <h3 className="text-lg font-semibold text-gray-800 mb-4">
+//                   Section-wise Evaluation
+//                 </h3>
+
+//                 <div className="space-y-4">
+//                   {Object.entries(
+//                     selectedReport.reportAnalysis?.evaluationText || {}
+//                   ).map(
+//                     ([key, value]) =>
+//                       key !== "overallSummary" && (
+//                         <div
+//                           key={key}
+//                           className="p-4 border rounded-lg bg-white shadow-sm"
+//                         >
+//                           <div className="font-medium text-gray-900 capitalize">
+//                             {key.replace(/([A-Z])/g, " $1")}
+//                           </div>
+//                           <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+//                             {value}
+//                           </p>
+//                         </div>
+//                       )
+//                   )}
+//                 </div>
+//               </div>
+
+//               {/* ================= OVERALL SUMMARY ================= */}
+//               <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+//                 <h3 className="text-lg font-semibold text-blue-800">
+//                   Overall Assessment Summary
+//                 </h3>
+//                 <p className="text-sm text-blue-900 mt-2 leading-relaxed">
+//                   {selectedReport.reportAnalysis?.evaluationText?.overallSummary}
+//                 </p>
+//               </div>
+
+//               {/* ================= IMPROVEMENT PLAN ================= */}
+//               <div className="mt-8">
+//                 <h3 className="text-lg font-semibold text-gray-800 mb-3">
+//                   Recommended Improvement Areas
+//                 </h3>
+
+//                 <div className="p-4 border bg-gray-50 rounded-lg">
+//                   <ul className="list-disc ml-5 text-sm text-gray-700 space-y-2">
+//                     {Object.values(
+//                       selectedReport.reportAnalysis?.improvementResources || {}
+//                     )
+//                       .flat()
+//                       .map((item, idx) => (
+//                         <li key={idx}>{item}</li>
+//                       ))}
+//                   </ul>
+//                 </div>
+//               </div>
+
+//               {/* ================= ACTIONS ================= */}
+//               <div className="flex justify-between items-center mt-8">
+
+//                 <div className="flex gap-3">
+
+//                   {/* Download PDF */}
+//                   <button
+//                     onClick={() => downloadReportPDF(selectedReport)}
+//                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
+//                   >
+//                     Download PDF
+//                   </button>
+
+//                   {/* Shortlist Toggle */}
+//                   <button
+//                     onClick={async () => {
+//                       const newStatus = !selectedReport.shortlisted;
+
+//                       const res = await fetch(
+//                         `/api/admin/reports/${selectedReport._id}`,
+//                         {
+//                           method: "PATCH",
+//                           headers: { "Content-Type": "application/json" },
+//                           body: JSON.stringify({ shortlisted: newStatus }),
+//                         }
+//                       );
+
+//                       const data = await res.json();
+//                       if (data.ok) {
+//                         setShowReportModal(false);
+//                         loadReports();
+//                       }
+//                     }}
+//                     className={`px-4 py-2 rounded-md text-white font-medium
+//       ${selectedReport.shortlisted ? "bg-red-600" : "bg-green-600"}`}
+//                   >
+//                     {selectedReport.shortlisted
+//                       ? "Remove from Shortlist"
+//                       : "Shortlist Candidate"}
+//                   </button>
+
+//                 </div>
+//                 <button
+//                   onClick={closeReportModal}
+//                   className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+//                 >
+//                   Close
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//         {showInterviewReportModal && selectedInterviewReport && (() => {
+
+//           const text = selectedInterviewReport.reportAnalysis || "";
+
+
+//           const scoreRegex =
+//             /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
+
+//           const scores = [];
+//           let match;
+
+//           while ((match = scoreRegex.exec(text)) !== null) {
+//             scores.push({
+//               label: match[1].replace(/\s+/g, " ").trim(),
+//               value: Number(match[2])
+//             });
+//           }
+
+
+//           const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
+//           const overallMatch = text.match(overallRegex);
+
+//           const overallScore = overallMatch ? Number(overallMatch[1]) : null;
+//           const overallTotal = overallMatch ? Number(overallMatch[2]) : null;
+
+//           const improvementRegex =
+//             /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
+
+//           const improvementMatch = text.match(improvementRegex);
+
+//           const improvementText = improvementMatch
+//             ? improvementMatch[1].trim()
+//             : null;
+
+//           const mainText = improvementMatch
+//             ? text.replace(improvementRegex, "").trim()
+//             : text;
+
+//           return (
+//             <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+//               <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+
+//                 {/* Close */}
+//                 <button
+//                   onClick={() => setShowInterviewReportModal(false)}
+//                   className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+//                 >
+//                   ✕
+//                 </button>
+
+//                 {/* Header */}
+//                 <div className="border-b pb-4 mb-6">
+//                   <h2 className="text-2xl font-semibold text-gray-900">
+//                     Interview Evaluation Report
+//                   </h2>
+//                   <p className="text-sm text-gray-600 mt-2">
+//                     <strong>Email:</strong> {selectedInterviewReport.email}
+//                   </p>
+//                   <p className="text-sm text-gray-600">
+//                     <strong>Role:</strong> {selectedInterviewReport.role}
+//                   </p>
+//                   <p className="text-xs text-gray-400 mt-1">
+//                     Generated on {new Date(selectedInterviewReport.createdAt).toLocaleString()}
+//                   </p>
+//                 </div>
+
+//                 {/* SCORE CARDS */}
+//                 {scores.length > 0 && (
+//                   <div className="mb-8">
+//                     <h3 className="text-lg font-semibold mb-4 text-gray-800">
+//                       Scorecard
+//                     </h3>
+
+//                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+//                       {scores.map((s, i) => (
+//                         <div
+//                           key={i}
+//                           className="p-4 rounded-xl border bg-white shadow-sm"
+//                         >
+//                           <div className="text-sm font-medium text-gray-600">
+//                             {s.label}
+//                           </div>
+
+//                           <div className="mt-3 flex items-center justify-between">
+//                             <div className="text-2xl font-bold text-gray-900">
+//                               {s.value}/10
+//                             </div>
+
+//                             <div className="w-24 h-2 bg-gray-200 rounded-full">
+//                               <div
+//                                 className={`h-full rounded-full ${s.value >= 7
+//                                   ? "bg-green-500"
+//                                   : s.value >= 4
+//                                     ? "bg-yellow-500"
+//                                     : "bg-red-500"
+//                                   }`}
+//                                 style={{ width: `${(s.value / 10) * 100}%` }}
+//                               />
+//                             </div>
+//                           </div>
+//                         </div>
+//                       ))}
+//                     </div>
+
+//                     {overallScore && (
+//                       <p className="text-sm text-gray-600 mt-4">
+//                         <strong>Overall Score:</strong> {overallScore} / {overallTotal}
+//                       </p>
+//                     )}
+//                   </div>
+//                 )}
+
+//                 {/* MAIN ANALYSIS TEXT */}
+//                 <div className="mb-8">
+//                   <h3 className="text-lg font-semibold text-gray-800 mb-3">
+//                     Detailed Evaluation
+//                   </h3>
+
+//                   <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed border rounded-lg p-4 bg-gray-50">
+//                     {mainText}
+//                   </div>
+//                 </div>
+
+//                 {/* IMPROVEMENTS */}
+//                 {improvementText && (
+//                   <div className="p-5 bg-blue-50 border border-blue-200 rounded-xl">
+//                     <h3 className="text-lg font-semibold text-blue-800 mb-3">
+//                       Improvement Suggestions
+//                     </h3>
+
+//                     <div className="text-sm text-blue-900 whitespace-pre-wrap leading-relaxed">
+//                       {improvementText}
+//                     </div>
+//                   </div>
+//                 )}
+//                 <div className="flex justify-end mt-8 gap-3">
+
+//                   <button
+//                     onClick={() => downloadInterviewPDF(selectedInterviewReport)}
+//                     className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
+//                   >
+//                     Download PDF
+//                   </button>
+
+//                   <button
+//                     onClick={() => setShowInterviewReportModal(false)}
+//                     className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+//                   >
+//                     Close
+//                   </button>
+
+//                 </div>
+
+//               </div>
+
+//             </div>
+//           );
+
+//         })()}
+
+
+//         {/* ⭐ HOD FEEDBACK MODAL */}
+//         {showHodModal && selectedHodReview && (
+//           <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+//             <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+//               <button
+//                 onClick={() => setShowHodModal(false)}
+//                 className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+//               >
+//                 ✕
+//               </button>
+
+//               <div className="border-b pb-4 mb-6">
+//                 <h2 className="text-2xl font-bold text-gray-900">HOD Culture Review Feedback</h2>
+//                 <div className="mt-2 flex flex-wrap gap-4 text-sm">
+//                   <p className="text-gray-600"><strong>HOD Name:</strong> {selectedHodReview.hodName || "N/A"}</p>
+//                   <p className="text-gray-600"><strong>Department:</strong> {selectedHodReview.departmentName || "N/A"}</p>
+//                   <p className="text-gray-600"><strong>Submitted:</strong> {new Date(selectedHodReview.submittedAt).toLocaleString()}</p>
+//                 </div>
+//               </div>
+
+//               <div className="space-y-6">
+//                 {selectedHodReview.responses && selectedHodReview.responses.map((item, idx) => (
+//                   <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+//                     <p className="text-sm font-bold text-indigo-600 mb-1">Question {idx + 1}</p>
+//                     <p className="text-gray-900 font-semibold mb-3">{item.question}</p>
+//                     <div className="bg-white p-4 rounded-lg border border-gray-200 text-gray-700 leading-relaxed min-h-[60px]">
+//                       {item.answer || <span className="text-gray-400 italic">No answer provided</span>}
+//                     </div>
+//                   </div>
+//                 ))}
+//               </div>
+
+//               <div className="flex justify-end mt-8">
+//                 <button
+//                   onClick={() => setShowHodModal(false)}
+//                   className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition"
+//                 >
+//                   Close
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//         {/* ⭐ HOD LINKS LIST MODAL */}
+//         {showHodLinksListModal && (
+//           <div className="fixed inset-0 bg-black/50 z-[55] flex items-center justify-center p-4">
+//             <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+//               <button
+//                 onClick={() => setShowHodLinksListModal(false)}
+//                 className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+//               >
+//                 ✕
+//               </button>
+
+//               <div className="border-b pb-4 mb-6">
+//                 <h2 className="text-2xl font-bold text-gray-900">HOD Review Links</h2>
+//                 <p className="text-sm text-gray-600 mt-1">Copy and share these links with your department heads.</p>
+//               </div>
+
+//               {loadingHod ? (
+//                 <div className="text-center py-20 text-gray-400">Loading links...</div>
+//               ) : hodReviews.length === 0 ? (
+//                 <div className="text-center py-20 text-gray-400 italic">No HOD links generated yet. Complete onboarding steps to generate links.</div>
+//               ) : (
+//                 <div className="space-y-4">
+//                   {hodReviews.map((review, idx) => {
+//                     const url = typeof window !== "undefined"
+//                       ? `${window.location.origin}/admin/hod-form/${review.token}`
+//                       : `/admin/hod-form/${review.token}`;
+//                     return (
+//                       <div key={review.token} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+//                         <span className="text-xs font-bold text-gray-400 w-5">#{idx + 1}</span>
+
+//                         <input
+//                           readOnly
+//                           value={url}
+//                           className="flex-1 bg-white text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none cursor-text focus:border-indigo-300"
+//                           onFocus={e => e.target.select()}
+//                         />
+
+//                         <span className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full uppercase tracking-wider whitespace-nowrap ${review.isSubmitted
+//                           ? "bg-green-100 text-green-700"
+//                           : "bg-yellow-100 text-yellow-700"
+//                           }`}>
+//                           {review.isSubmitted ? "Submitted" : "Pending"}
+//                         </span>
+
+//                         <div className="flex items-center gap-2">
+//                           <button
+//                             onClick={() => copyLink(review.token)}
+//                             className={`px-4 py-2 rounded-lg text-sm font-semibold border transition shrink-0 ${copiedToken === review.token
+//                               ? "bg-green-500 border-green-500 text-white"
+//                               : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+//                               }`}
+//                           >
+//                             {copiedToken === review.token ? "Copied!" : "Copy Link"}
+//                           </button>
+
+//                           {review.isSubmitted && (
+//                             <button
+//                               onClick={() => {
+//                                 setSelectedHodReview(review);
+//                                 setShowHodModal(true);
+//                               }}
+//                               className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
+//                             >
+//                               Feedback
+//                             </button>
+//                           )}
+//                         </div>
+//                       </div>
+//                     );
+//                   })}
+//                 </div>
+//               )}
+
+//               <div className="flex justify-end mt-8">
+//                 <button
+//                   onClick={() => setShowHodLinksListModal(false)}
+//                   className="px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition shadow-lg shadow-gray-200"
+//                 >
+//                   Done
+//                 </button>
+//               </div>
+//             </div>
+//           </div>
+//         )}
+//       </div>
+//     </div>
+//   );
+// }
+
+
 // pages/admin/index.js
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
 import { MdLogout } from "react-icons/md";
 import CompanyProfileModal from "../../components/CompanyProfileModal";
-import { FiUser } from "react-icons/fi";
-import jsPDF from "jspdf";
+import CreateInterviewWizard from "../../components/createInterviewWizard";
+import Employee from '../../components/employees';
+import Assessment from '../../components/EmployeeAssessment';
 import Link from "next/link";
 import { HiChevronDown } from 'react-icons/hi';
+import { FiUser, FiGrid, FiMic, FiFileText, FiPlus, FiUsers, FiLink, FiBriefcase, FiAward, FiCalendar, FiEdit2, FiEye, FiSearch, FiCheckCircle, FiXCircle, FiBell } from "react-icons/fi";
 export default function AdminIndex() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -26,7 +2218,7 @@ export default function AdminIndex() {
   const [copiedToken, setCopiedToken] = useState(null);
 
   // UI state
-  const [activeTab, setActiveTab] = useState("interviews"); // interviews | reports | hod
+  const [activeTab, setActiveTab] = useState("dashboard"); // dashboard | interviews | reports
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("all");
   const [recommendFilter, setRecommendFilter] = useState("all");
@@ -38,20 +2230,6 @@ export default function AdminIndex() {
 
   // create modal
   const [showCreate, setShowCreate] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [form, setForm] = useState({
-    jobRole: "",
-    jd: "",
-    qualification: "",
-    criteria: "",
-    location: "",
-    questions: {
-      totalQuestions: 60,
-      aptitude: 30,
-      technical: 30,
-
-    },
-  });
 
 
   // report modal
@@ -66,7 +2244,6 @@ export default function AdminIndex() {
   const [showCombinedModal, setShowCombinedModal] = useState(false);
   const [selectedHodReview, setSelectedHodReview] = useState(null);
   const [showHodModal, setShowHodModal] = useState(false);
-  const [showHodLinksListModal, setShowHodLinksListModal] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -147,62 +2324,6 @@ export default function AdminIndex() {
       console.error("logout error", err);
       setLoggingOut(false);
     }
-  }
-
-  async function handleCreate(e) {
-    e.preventDefault();
-
-    const v = validateForm();
-    setErrors(v);
-    if (Object.keys(v).length > 0) return;
-
-    try {
-      const payload = {
-        ...form,
-        clients: form.clients
-          ? form.clients.split(",").map(c => c.trim()).filter(Boolean)
-          : [],
-      };
-
-      const res = await fetch("/api/admin/interviews", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-      const data = await res.json();
-      console.log("CREATE RESPONSE:", data);
-
-      if (data.ok) {
-        loadInterviews();
-        setShowCreate(false);
-        alert("Job created successfully");
-      } else {
-        alert("Error creating interview");
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error creating interview");
-    }
-  }
-
-  function validateForm() {
-    let err = {};
-    if (!form.jobRole.trim()) err.jobRole = "Job role is required";
-    if (!form.jd.trim()) err.jd = "Job description is required";
-    if (!form.qualification.trim()) err.qualification = "Qualification is required";
-    if (!form.criteria.trim()) err.criteria = "Criteria is required";
-    if (!form.location.trim()) err.location = "Location is required";
-
-
-    const { aptitude, technical, totalQuestions } = form.questions;
-    if (aptitude < 1) err.aptitude = "Must be at least 1";
-    if (technical < 1) err.technical = "Must be at least 1";
-
-
-    const sum = aptitude + technical;
-    if (sum !== totalQuestions) err.total = `Total must be ${totalQuestions}, but got ${sum}`;
-    return err;
   }
 
   async function toggleActive(id, current) {
@@ -715,364 +2836,554 @@ export default function AdminIndex() {
       console.error(err);
     }
   }
+  async function toggleActive(id, current) {
+  try {
+    await fetch(`/api/admin/interviews/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isActive: !current }),
+    });
+    loadInterviews();
+  } catch (err) {
+    console.error("toggleActive error", err);
+  }
+}
   return (
-    <div className="min-h-screen bg-gray-50 p-6 md:p-10">
-      <div className="max-w-7xl mx-auto">
-
-        {/* header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Company Dashboard</h1>
-            <p className="text-sm text-gray-600 mt-1">Manage interviews, view AI reports and shortlist candidates.</p>
+    <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+      {/* Top Navbar */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            {/* Logo/Brand */}
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900 tracking-tight">Company Dashboard</span>
+            </div>
+            
+            {/* Search */}
+            <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-1.5 ml-8 group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-300 transition-all">
+              <span className="text-gray-400 mr-2 group-focus-within:text-indigo-500 transition-colors"><FiSearch size={16} /></span>
+              <input 
+                type="text" 
+                placeholder="Search Interviews..." 
+                className="bg-transparent border-none outline-none text-sm w-64 text-gray-700 placeholder-gray-400"
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              />
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-
-            <div>
-              {/* <button
-                onClick={() => setShowCreate(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md shadow hover:bg-indigo-700"
-              >
-                + Create Interview
-              </button> */}
-              {/* <button
-    onClick={() => router.push("/admin/employees")}
-    className="px-4 py-2 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
-  >
-    Employees
-  </button> */}
+          <div className="flex items-center gap-6">
+            {/* Profile Intro */}
+            <div className="flex items-center gap-3 pr-4 border-r border-gray-100">
+              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-sm ring-2 ring-blue-50">
+                <FiUser size={16} />
+              </div>
+              <span className="text-sm font-semibold text-gray-700 tracking-tight">Admin</span>
             </div>
 
-            {/* Profile Dropdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowProfileMenu(p => !p)}
-                className="w-6 h-6 rounded-full bg-white text-black flex items-center justify-center border border-black"
-              >
-                <FiUser size={18} />
-              </button>
+            <button
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="flex items-center gap-2 px-4 py-2 text-sm text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition font-medium"
+            >
+              <MdLogout size={16} /> Logout
+            </button>
+          </div>
+        </div>
+      </header>
 
-              {showProfileMenu && (
-                <>
-                  {/* click outside overlay */}
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowProfileMenu(false)}
-                  />
+      {/* Sub Navbar */}
+      <div className="bg-white border-b border-gray-200 overflow-x-auto no-scrollbar">
+        <div className="max-w-7xl mx-auto px-6 whitespace-nowrap">
+          <div className="flex items-center">
+            <button 
+              onClick={() => setActiveTab("dashboard")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'dashboard' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiGrid className="text-lg" /> Dashboard
+            </button>
+            <button 
+              onClick={() => setActiveTab("interviews")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'interviews' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiMic className="text-lg" /> Interviews
+            </button>
+            <button 
+              onClick={() => setActiveTab("reports")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'reports' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiFileText className="text-lg" /> Reports
+            </button>
+            <button 
+              onClick={() => setShowCreate(true)}
+              className="py-4 px-6 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-2 group"
+            >
+              <FiPlus className="text-lg group-hover:scale-110 transition-transform" /> Create
+            </button>
+            <button 
+              onClick={() => setActiveTab("employee")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'employee' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiLink className="text-lg" /> Employee
+            </button>
+             <button 
+              onClick={() => setActiveTab("assessment")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'assessment' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiLink className="text-lg" /> Assessment
+            </button>
+            <button 
+              onClick={() => setActiveTab("hod-links")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'hod-links' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiLink className="text-lg" /> HOD Links
+            </button>
+          </div>
+        </div>
+      </div>
 
-                  {/* dropdown */}
-
-
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border z-50">
-
-                    {/* Profile */}
-                    {/* <button
-    onClick={() => {
-      setShowCompanyProfile(true);
-      setShowProfileMenu(false);
-    }}
-    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-  >
-    Profile
-  </button> */}
-                    <button
-                      onClick={() => setShowCreate(true)}
-                      className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
-                    >
-                      Create Interview
-                    </button>
-                    {/* Employee with Submenu */}
-                    <div className="relative">
-
-                      <button
-                        onClick={() => setShowEmployeeSub(!showEmployeeSub)}
-                        className="w-full flex justify-between items-center px-4 py-2 text-sm hover:bg-gray-100"
-                      >
-                        Manage Employee
-                        <HiChevronDown />
-                      </button>
-
-                      {showEmployeeSub && (
-                        <div className="ml-2 border-l bg-gray-50">
-
-                          <Link
-                            href="/admin/employees"
-                            className="block px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            Add Employee
-                          </Link>
-
-                          <Link
-                            href="/admin/employee-assessments"
-                            className="block px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            Create Assessment
-                          </Link>
-
-                        </div>
-                      )}
-                    </div>
-
-                    {/* HOD Links - standalone item */}
-                    <button
-                      onClick={() => {
-                        loadHodLinks();
-                        setShowHodLinksListModal(true);
-                        setShowProfileMenu(false);
-                        setShowEmployeeSub(false);
-                      }}
-                      className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                    >
-                      HOD Links
-                    </button>
-
-                    {/* Logout */}
-                    <button
-                      onClick={handleLogout}
-                      disabled={loggingOut}
-                      className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      Logout
-                    </button>
-
-                  </div>
-                </>
-              )}
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
+        {activeTab==='employee'&&(<Employee/>)}
+        {activeTab==='assessment'&&<Assessment/>}
+        {activeTab === 'dashboard' && (
+          <>
+            {/* Page Header */}
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900">Company Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1 pb-4 border-b border-gray-200">Manage interviews, view reports and shortlist candidates</p>
             </div>
 
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {[
+            { label: 'Total Interviews', value: interviews.length, change: '+0', icon: <FiBriefcase />, color: 'blue' },
+            { label: 'Shortlisted', value: reports.filter(r => r.shortlisted).length, change: '+0', icon: <FiAward />, color: 'orange' },
+          ].map((stat, i) => (
+            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
+                <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
+                  stat.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                  stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+                  stat.color === 'purple' ? 'bg-purple-50 text-purple-600' :
+                  'bg-orange-50 text-orange-600'
+                }`}>
+                  {stat.icon}
+                </span>
+              </div>
+              <div className="flex items-end justify-between">
+                <div>
+                  <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+                  {/* <div className="flex items-center gap-1 mt-2">
+                    <span className="text-emerald-500 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1">
+                      ↗ {stat.change}
+                    </span>
+                    <span className="text-xs text-gray-400">vs last month</span>
+                  </div> */}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Recent Evaluations Table Header */}
+        <div className="bg-white rounded-t-2xl shadow-sm border-t border-x border-gray-100 overflow-hidden mt-2">
+          <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h3 className="text-lg font-bold text-gray-900">Recent Evaluations</h3>
+            <div className="flex gap-2">
+              <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">View All →</a>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-white border-y border-gray-100 text-[11px] font-bold text-gray-800 uppercase tracking-wide">
+                  <th className="px-6 py-4">Email</th>
+                  <th className="px-6 py-4">Role</th>
+                  <th className="px-6 py-4">Date</th>
+                  <th className="px-6 py-4 text-center">Score</th>
+                  <th className="px-6 py-4 text-center">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {reports.slice(0, 5).length === 0 ? (
+                  <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No recent evaluations.</td></tr>
+                ) : (
+                  reports.slice(0, 5).map(r => (
+                    <tr key={r._id} className="hover:bg-gray-50/50 transition">
+                      <td className="px-6 py-4">
+                        <span className="text-sm font-semibold text-gray-600">{r.email}</span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-gray-500">{r.role}</td>
+                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                      <td className="px-6 py-4 text-center">
+                        {r.reportAnalysis?.overallScore ? (
+                           <span className="text-sm font-bold text-gray-700">
+                             {Math.round((r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%
+                           </span>
+                        ) : (
+                          <div className="font-semibold text-gray-400 text-sm">Pending</div>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {r.shortlisted ? (
+                          <span className="inline-flex justify-center items-center px-3 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100">
+                            Selected
+                          </span>
+                        ) : (
+                          <span className="inline-flex justify-center items-center px-3 py-1 border border-red-50 rounded-full text-[10px] font-bold bg-red-50 text-red-500">
+                            NA
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 
-        {/* tabs + filters */}
-        <div className="bg-white rounded-lg shadow p-4 mb-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 bg-gray-100 rounded-md p-1">
-                <button
-                  onClick={() => setActiveTab("interviews")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "interviews" ? "bg-white text-gray-900 shadow" : "text-gray-600"}`}
-                >
-                  Interviews
-                </button>
-                <button
-                  onClick={() => setActiveTab("reports")}
-                  className={`px-4 py-2 rounded-md text-sm font-medium ${activeTab === "reports" ? "bg-white text-gray-900 shadow" : "text-gray-600"}`}
-                >
-                  Reports
-                </button>
-              </div>
+        {/* Action Buttons */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-8">
+          <button 
+            onClick={() => setShowCreate(true)}
+            className="flex items-center justify-between p-6 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition shadow-sm group"
+          >
+            <div className="text-left">
+              <h3 className="font-bold text-base mb-1">Create New Interview</h3>
+              <p className="text-xs text-blue-100 font-medium opacity-90">Set up a new interview role</p>
+            </div>
+            <span className="text-2xl font-light opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">+</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('interviews')}
+            className="flex items-center justify-between p-6 bg-[#A80CF0] rounded-xl text-white hover:bg-[#9500d8] transition shadow-sm group"
+          >
+            <div className="text-left">
+              <h3 className="font-bold text-base mb-1">Manage Interviews</h3>
+              <p className="text-xs text-white/80 font-medium">View and edit active interviews</p>
+            </div>
+            <span className="text-xl opacity-80 group-hover:opacity-100 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+            </span>
+          </button>
+        </div>
+        </>
+        )}
 
-              <div className="hidden sm:flex items-center gap-2">
+        {/* Dynamic Content Based on Tab */}
+        {activeTab === 'interviews' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Interviews</h1>
+                <p className="text-sm text-gray-500 mt-1">Manage and monitor your interview roles</p>
+              </div>
+              <button 
+                onClick={() => setShowCreate(true)}
+                className="py-2.5 px-5 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2"
+              >
+                <span>+</span> Create Interview
+              </button>
+            </div>
+
+            <div className="mb-6 flex flex-col md:flex-row gap-4">
+              <div className="flex-1 relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><FiSearch size={18} /></span>
+                <input 
+                  type="text" 
+                  placeholder="Search email or role..." 
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <select
+                className="py-3 px-8 bg-white border border-gray-200 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-100 appearance-none min-w-[150px]"
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+              >
+                <option value="all">All Roles</option>
+                {[...new Set(interviews.map(r => r.jobRole))].filter(Boolean).map(role => (
+                  <option key={role} value={role}>{role}</option>
+                ))}
+              </select>
+            </div>
+
+            {interviews.filter(iv => 
+              (roleFilter === 'all' || iv.jobRole === roleFilter) && 
+              (!search || (iv.jobRole || '').toLowerCase().includes(search.toLowerCase()))
+            ).length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl text-gray-400"><FiBriefcase /></div>
+                <h4 className="text-gray-900 font-bold mb-1">No roles found</h4>
+                <p className="text-gray-500 text-sm mb-4">You haven't created any interview roles yet, or none match your search.</p>
+                <button onClick={() => setShowCreate(true)} className="text-indigo-600 font-semibold text-sm hover:underline">Create your first role →</button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {interviews.filter(iv => 
+                  (roleFilter === 'all' || iv.jobRole === roleFilter) && 
+                  (!search || (iv.jobRole || '').toLowerCase().includes(search.toLowerCase()))
+                ).map(iv => (
+                  <div key={iv._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col group">
+                    {/* Header */}
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <h4 className="text-lg font-bold text-gray-900 mb-1">
+                          {iv.jobRole}
+                        </h4>
+                        {iv.jd && (
+                          <p className="text-[10px] text-gray-500 line-clamp-1 max-w-[200px]">
+                            {iv.jd}
+                          </p>
+                        )}
+                      </div>
+                      <button
+  onClick={() => toggleActive(iv._id, iv.isActive)}
+  className={`relative w-10 h-5 rounded-full transition ${
+    iv.isActive ? "bg-green-500" : "bg-gray-300"
+  }`}
+>
+  <span
+    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${
+      iv.isActive ? "left-5" : "left-1"
+    }`}
+  />
+</button>
+                    </div>
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-2 gap-x-8 gap-y-5 mb-8 flex-1">
+                      <div>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 italic">
+                           <span className="w-1 h-1 rounded-full bg-gray-300"></span> Qualification
+                        </p>
+                        <p className="text-xs font-bold text-gray-800 truncate" title={iv.qualification}>{iv.qualification}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 italic">
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span> Criteria
+                        </p>
+                        <p className="text-xs font-bold text-gray-800 truncate" title={iv.criteria}>{iv.criteria}</p>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 italic">
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span> Location
+                        </p>
+                        <p className="text-xs font-bold text-gray-800 truncate" title={iv.location}>{iv.location}</p>
+                      </div>
+                    </div>
+
+                    {/* Footer Stats */}
+                    <div className="flex items-center justify-between pb-4 border-b border-gray-50 mb-4">
+                      <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                        <FiCalendar className="text-gray-300" />
+                        <span>Created: <span className="text-gray-600 font-bold">{new Date(iv.createdAt).toLocaleDateString()}</span></span>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 flex items-center bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 overflow-hidden">
+                        <span className="flex-1 text-[10px] text-gray-500 font-medium truncate mr-2 italic">
+                          {`${typeof window !== 'undefined' ? window.location.host : ''}/interview/${iv.slug}/apply`}
+                        </span>
+                        <button
+                          onClick={() => {
+                            const link = `${window.location.host}/interview/${iv.slug}/apply`;
+                            navigator.clipboard.writeText(link);
+                            alert("Link copied!");
+                          }}
+                          className="shrink-0 py-1.5 px-3 bg-emerald-50 text-emerald-600 rounded-lg text-[10px] font-bold hover:bg-emerald-100 transition active:scale-95 flex items-center gap-1.5 border border-emerald-100"
+                        >
+                          <FiLink size={12} /> Copy Link
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'reports' && (
+          <>
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Candidate Reports</h1>
+                <p className="text-sm text-gray-500 mt-1">View AI-generated evaluation reports for all candidates.</p>
+              </div>
+            </div>
+
+            <div className="mb-6">
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><FiSearch size={18} /></span>
                 <input
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Search email or role"
-                  className="px-3 py-2 border rounded-md text-sm w-52 focus:outline-none focus:ring-2 focus:ring-indigo-200"
+                  placeholder="Search by email or role..."
+                  className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition"
                 />
-                <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
-                  {roles.map(r => <option key={r} value={r}>{r === "all" ? "All roles" : r}</option>)}
-                </select>
-                {/* <select value={recommendFilter} onChange={(e) => setRecommendFilter(e.target.value)} className="px-3 py-2 border rounded-md text-sm">
-                  <option value="all">Any recommendation</option>
-                  <option value="Proceed">Proceed</option>
-                  <option value="Borderline">Borderline</option>
-                  <option value="Cannot Proceed">Cannot Proceed</option>
-                </select> */}
-
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="text-sm text-gray-600">Showing <span className="font-medium">{filteredReports.length}</span> reports</div>
-
-            </div>
-          </div>
-
-          {/* responsive small controls */}
-          <div className="mt-3 sm:hidden flex gap-2">
-            <input
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Search email or role"
-              className="px-3 py-2 border rounded-md text-sm w-full"
-            />
-          </div>
-        </div>
-
-        {/* content */}
-        <div >
-          <div>
-            {/* ⭐ SHOW INTERVIEWS ONLY IF TAB = interviews */}
-            {activeTab === "interviews" && (
-              <div className="lg:col-span-7">
-
-                <div className="bg-white rounded-lg shadow p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-medium">Interviews</h3>
-                    <div className="text-sm text-gray-500">{loadingInterviews ? "Loading..." : `${interviews.length} created`}</div>
-                  </div>
-
-                  {/* responsive cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {interviews.map(iv => (
-                      <div key={iv._id} className="p-4 border rounded-lg bg-white shadow-sm">
-                        <div className="">
-                          <div>
-                            <div className="flex items-center justify-between mt-3 gap-3">
-
-                              {/* Left: Status Badge */}
-                              <div
-                                className={`inline-flex items-center px-2 py-1 rounded-full text-xs ${iv.isActive
-                                  ? "bg-green-50 text-green-700"
-                                  : "bg-gray-100 text-gray-600"
-                                  }`}
-                              >
-                                {iv.isActive ? "Active" : "Inactive"}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-white border-b border-gray-100 text-xs font-bold text-gray-900 capitalize tracking-wide">
+                      <th className="px-6 py-4">Email</th>
+                      <th className="px-6 py-4">Role</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4 text-center">Score</th>
+                      <th className="px-6 py-4 text-center">Decision</th>
+                      <th className="px-6 py-4 text-center">Report</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {pageItems.length === 0 ? (
+                      <tr><td colSpan="6" className="px-6 py-12 text-center text-gray-500">No evaluations match your search.</td></tr>
+                    ) : (
+                      pageItems.map(r => (
+                        <tr key={r._id} className="hover:bg-gray-50/50 transition group">
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-bold text-gray-900">{r.email}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold text-gray-900">{r.role}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-gray-600">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                          <td className="px-6 py-4">
+                            {r.reportAnalysis?.overallScore ? (
+                              <div className="flex items-center justify-center gap-3">
+                                <span className="text-sm font-bold text-gray-900 text-right min-w-[36px]">
+                                  {Math.round((r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%
+                                </span>
+                                <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden hidden sm:block">
+                                  <div 
+                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000 ease-out" 
+                                    style={{ width: `${Math.min(100, (r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%` }}
+                                  />
+                                </div>
                               </div>
+                            ) : (
+                              <div className="text-center font-semibold text-gray-500 text-sm">Pending</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {r.shortlisted ? (
+                              <span className="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-green-50 text-green-600">
+                                <FiCheckCircle className="text-green-500" size={14} /> Selected
+                              </span>
+                            ) : (
+                              <span className="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
+                                <FiXCircle className="text-red-500" size={14} /> Reject
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <button
+                              onClick={() => openCombinedReport(r)}
+                              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-1.5 mx-auto"
+                            >
+                              <FiEye size={14} /> View
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              {totalPages > 0 && (
+                <div className="p-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white">
+                  <span className="text-sm text-gray-500 font-medium">Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, reports.length)} of {reports.length} report{reports.length !== 1 ? 's' : ''}</span>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1.5 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition flex items-center gap-2 shadow-sm"><span className="text-gray-400 font-bold">&lt;</span> Previous</button>
+                    <span className="text-sm text-gray-600 font-medium px-4">Page {page} / {totalPages}</span>
+                    <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-4 py-1.5 border border-gray-200 rounded-lg bg-white text-sm font-semibold text-gray-600 disabled:opacity-50 hover:bg-gray-50 transition flex items-center gap-2 shadow-sm">Next <span className="text-gray-400 font-bold">&gt;</span></button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )}
 
-                              {/* Right: Toggle Button */}
-                              <button
-                                onClick={() => toggleActive(iv._id, iv.isActive)}
-                                className="text-sm px-3 py-1 bg-yellow-200 rounded"
-                              >
-                                Toggle
-                              </button>
+        {activeTab === 'hod-links' && (
+          <>
+            <div className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900">HOD Links</h1>
+              <p className="text-sm text-gray-500 mt-1">Manage and share HOD review links.</p>
+            </div>
 
-                            </div>
-                            <div className="text-base font-semibold text-gray-900">{iv.jobRole || "Untitled Role"}</div>
-                            <div className="text-sm text-gray-500 mt-1">{iv.jd ? iv.jd.slice(0, 300) + (iv.jd.length > 300 ? "…" : "") : "No job description"}</div>
-                            <div className="text-sm text-gray-500 mt-1">Qualification: {iv.qualification}</div>
-                            <div className="text-sm text-gray-500 mt-1">Criteria: {iv.criteria}</div>
-                            <div className="text-sm text-gray-500 mt-1">Location: {iv.location}</div>
-                            <div className="mt-2 text-xs text-gray-400">{new Date(iv.createdAt).toLocaleString()}</div>
-                          </div>
-                          <div className="">
+            {loadingHod ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-20 text-center text-gray-400">Loading links...</div>
+            ) : hodReviews.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-20 text-center text-gray-400 italic">No HOD links generated yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {hodReviews.map((review, idx) => {
+                  const url = typeof window !== "undefined"
+                    ? `${window.location.origin}/admin/hod-form/${review.token}`
+                    : `/admin/hod-form/${review.token}`;
+                  return (
+                    <div key={review.token} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col group">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className="text-xs font-bold text-gray-400">LINK #{idx + 1}</span>
+                        <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${review.isSubmitted
+                          ? "bg-green-50 text-green-700 border border-green-100"
+                          : "bg-red-50 text-red-700 border border-red-100"
+                        }`}>
+                          {review.isSubmitted ? "Submitted" : "Not Submitted"}
+                        </span>
+                      </div>
 
-                            <div className="mt-3 flex flex-col gap-2">
-                              <a
-                                href={`/interview/${iv.slug}/apply`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 text-sm underline break-all"
-                              >
-                                /interview/{iv.slug}/apply
-                              </a>
-
-
-                            </div>
-                          </div>
+                      <div className="mb-6">
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2">Share Link</p>
+                        <div className="flex gap-2">
+                          <input
+                            readOnly
+                            value={url}
+                            className="flex-1 bg-gray-50 text-xs text-gray-600 border border-gray-100 rounded-lg px-3 py-2 outline-none"
+                            onFocus={e => e.target.select()}
+                          />
                         </div>
                       </div>
-                    ))}
-                  </div>
 
-                  {/* fallback */}
-                  {interviews.length === 0 && !loadingInterviews && (
-                    <div className="text-center text-gray-500 p-8">No interviews created yet.</div>
-                  )}
-                </div>
-              </div>
-            )}
-
-
-            {/* ⭐ HOD LINKS TAB REMOVED (NOW A MODAL) */}
-
-            {/* ⭐ SHOW REPORTS ONLY IF TAB = reports */}
-            {activeTab === "reports" && (
-              <div className="lg:col-span-5">
-
-                <div className="bg-white rounded-lg shadow p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-medium">Candidate Reports</h3>
-                    <div className="text-sm text-gray-500">{loadingReports ? "Loading..." : `${reports.length} total`}</div>
-                  </div>
-
-                  {/* small summary badges */}
-                  {/* <div className="flex flex-wrap gap-2 mb-4">
-                    <div className="px-3 py-1 bg-green-50 text-green-800 rounded-full text-sm">Proceed: {reports.filter(r => r.reportAnalysis?.recommendation === "Proceed").length}</div>
-                    <div className="px-3 py-1 bg-yellow-50 text-yellow-800 rounded-full text-sm">Borderline: {reports.filter(r => r.reportAnalysis?.recommendation === "Borderline").length}</div>
-                    <div className="px-3 py-1 bg-gray-100 text-gray-800 rounded-full text-sm">Pending: {reports.filter(r => !r.reportAnalysis).length}</div>
-                  </div> */}
-
-                  {/* reports table (responsive) */}
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead>
-                        <tr className="text-left text-xs text-gray-500">
-                          <th className="py-2 pr-4">Email</th>
-                          <th className="py-2 pr-4">Role</th>
-                          {/* <th className="py-2 pr-4">Recommendation</th> */}
-                          <th className="py-2 pr-4">Date</th>
-                          <th className="py-2 pr-4">Report</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {pageItems.length === 0 && (
-                          <tr>
-                            <td colSpan="5" className="py-6 text-center text-gray-400">No reports match your filters</td>
-                          </tr>
+                      <div className="flex gap-2 mt-auto">
+                        <button
+                          onClick={() => copyLink(review.token)}
+                          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${copiedToken === review.token
+                            ? "bg-green-500 text-white"
+                            : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
+                          }`}
+                        >
+                          <FiLink size={14} /> {copiedToken === review.token ? "Copied!" : "Copy Link"}
+                        </button>
+                        {review.isSubmitted && (
+                          <button
+                            onClick={() => {
+                              setSelectedHodReview(review);
+                              setShowHodModal(true);
+                            }}
+                            className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                          >
+                            <FiEye size={14} /> Feedback
+                          </button>
                         )}
-                        {pageItems.map(r => (
-                          <tr key={r._id} className="border-t">
-                            <td className="py-3 pr-4">{r.email}</td>
-                            <td className="py-3 pr-4">{r.role}</td>
-                            {/* <td className="py-3 pr-4">
-                              <span className={`px-2 py-1 rounded-full text-xs ${r.reportAnalysis?.recommendation === "Proceed" ? "bg-green-50 text-green-700" : r.reportAnalysis?.recommendation === "Borderline" ? "bg-yellow-50 text-yellow-700" : "bg-gray-100 text-gray-800"}`}>
-                                {r.reportAnalysis?.recommendation || "Pending"}
-                              </span>
-                            </td> */}
-                            <td className="py-3 pr-4">{new Date(r.createdAt).toLocaleString()}</td>
-                            <td className="py-3 pr-4">
-                              <div className="flex gap-2">
-                                {/* <button onClick={() => openReportModal(r)} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm">Assessment</button>
-                                <button
-                                  onClick={() => openInterviewReport(r.email, r.role)}
-                                  className="px-3 py-1 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700"
-                                >
-                                  Interview
-
-
-                                </button> */}
-                                <button
-                                  onClick={() => openCombinedReport(r)}
-                                  className="px-3 py-1 bg-indigo-600 text-white rounded text-sm"
-                                >
-                                  View
-                                </button>
-                              </div>
-                            </td>
-                            <td className="py-3 pr-4">
-                              {r.shortlisted && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                                  <IoMdCheckmarkCircleOutline className="text-sm" />
-                                  Shortlisted
-                                </span>
-
-                              )
-                              }
-                            </td>
-
-
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* pagination */}
-                  <div className="mt-4 flex items-center justify-between">
-                    <div className="text-sm text-gray-600">Page {page} / {totalPages}</div>
-                    <div className="flex gap-2">
-                      <button onClick={() => setPage(p => Math.max(1, p - 1))} className="px-3 py-1 bg-white border rounded">Prev</button>
-                      <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="px-3 py-1 bg-white border rounded">Next</button>
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
-
             )}
-          </div>
-        </div>
+          </>
+        )}
+
+      </main>
         <CompanyProfileModal
           open={showCompanyProfile}
           onClose={() => setShowCompanyProfile(false)}
@@ -1080,203 +3391,11 @@ export default function AdminIndex() {
 
         {/* Create Modal */}
         {showCreate && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-6">
-            <div className="bg-white w-full max-w-3xl rounded-2xl shadow-2xl relative flex flex-col max-h-[90vh]">
-
-              {/* Header */}
-              <div className="flex items-center justify-between border-b px-6 py-4">
-                <h3 className="text-xl font-semibold text-gray-800">
-                  Create Interview
-                </h3>
-
-                <button
-                  onClick={() => setShowCreate(false)}
-                  className="text-gray-500 hover:text-gray-700 text-lg"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Form */}
-              <form
-                onSubmit={handleCreate}
-                className="p-6 overflow-y-auto space-y-5 flex-1"
-              >
-
-                {/* Job Role */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">Job Role</label>
-                  <input
-                    value={form.jobRole}
-                    onChange={(e) =>
-                      setForm({ ...form, jobRole: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  {errors.jobRole && (
-                    <div className="text-xs text-red-600 mt-1">
-                      {errors.jobRole}
-                    </div>
-                  )}
-                </div>
-
-                {/* Job Description */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Job Description
-                  </label>
-                  <textarea
-                    value={form.jd}
-                    onChange={(e) =>
-                      setForm({ ...form, jd: e.target.value })
-                    }
-                    rows={4}
-                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  {errors.jd && (
-                    <div className="text-xs text-red-600 mt-1">
-                      {errors.jd}
-                    </div>
-                  )}
-                </div>
-
-                {/* Qualification */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Qualification
-                  </label>
-                  <input
-                    value={form.qualification}
-                    onChange={(e) =>
-                      setForm({ ...form, qualification: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  {errors.qualification && (
-                    <div className="text-xs text-red-600 mt-1">
-                      {errors.qualification}
-                    </div>
-                  )}
-                </div>
-
-                {/* Criteria */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Criteria
-                  </label>
-                  <input
-                    value={form.criteria}
-                    onChange={(e) =>
-                      setForm({ ...form, criteria: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                  />
-                  {errors.criteria && (
-                    <div className="text-xs text-red-600 mt-1">
-                      {errors.criteria}
-                    </div>
-                  )}
-                </div>
-
-                {/* Location */}
-                <div>
-                  <label className="text-sm font-medium text-gray-700">
-                    Location
-                  </label>
-                  <input
-                    value={form.location}
-                    onChange={(e) =>
-                      setForm({ ...form, location: e.target.value })
-                    }
-                    className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                    placeholder="Bangalore, Pune, Noida"
-                  />
-                  {errors.location && (
-                    <p className="text-xs text-red-600 mt-1">
-                      {errors.location}
-                    </p>
-                  )}
-                </div>
-
-                {/* Questions */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Aptitude
-                    </label>
-                    <input
-                      type="number"
-                      value={form.questions.aptitude}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          questions: {
-                            ...form.questions,
-                            aptitude: Number(e.target.value),
-                          },
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                    />
-                    {errors.aptitude && (
-                      <div className="text-xs text-red-600 mt-1">
-                        {errors.aptitude}
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Technical
-                    </label>
-                    <input
-                      type="number"
-                      value={form.questions.technical}
-                      onChange={(e) =>
-                        setForm({
-                          ...form,
-                          questions: {
-                            ...form.questions,
-                            technical: Number(e.target.value),
-                          },
-                        })
-                      }
-                      className="mt-1 block w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-green-500 focus:outline-none"
-                    />
-                    {errors.technical && (
-                      <div className="text-xs text-red-600 mt-1">
-                        {errors.technical}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {errors.total && (
-                  <div className="text-sm text-red-700">
-                    {errors.total}
-                  </div>
-                )}
-
-                {/* Footer Buttons */}
-                <div className="flex items-center justify-end gap-3 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setShowCreate(false)}
-                    className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700"
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="px-5 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow"
-                  >
-                    Create Interview
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>)}
+          <CreateInterviewWizard 
+            onClose={() => setShowCreate(false)} 
+            onSuccess={loadInterviews} 
+          />
+        )}
 
         {/* Report Modal */}
         {showCombinedModal && combinedReport && (() => {
@@ -2098,91 +4217,7 @@ ${finalRecommendation === "Proceed"
             </div>
           </div>
         )}
-        {/* ⭐ HOD LINKS LIST MODAL */}
-        {showHodLinksListModal && (
-          <div className="fixed inset-0 bg-black/50 z-[55] flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
-              <button
-                onClick={() => setShowHodLinksListModal(false)}
-                className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
 
-              <div className="border-b pb-4 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">HOD Review Links</h2>
-                <p className="text-sm text-gray-600 mt-1">Copy and share these links with your department heads.</p>
-              </div>
-
-              {loadingHod ? (
-                <div className="text-center py-20 text-gray-400">Loading links...</div>
-              ) : hodReviews.length === 0 ? (
-                <div className="text-center py-20 text-gray-400 italic">No HOD links generated yet. Complete onboarding steps to generate links.</div>
-              ) : (
-                <div className="space-y-4">
-                  {hodReviews.map((review, idx) => {
-                    const url = typeof window !== "undefined"
-                      ? `${window.location.origin}/admin/hod-form/${review.token}`
-                      : `/admin/hod-form/${review.token}`;
-                    return (
-                      <div key={review.token} className="flex flex-col sm:flex-row sm:items-center gap-3 p-4 border border-gray-200 rounded-xl bg-gray-50/50">
-                        <span className="text-xs font-bold text-gray-400 w-5">#{idx + 1}</span>
-
-                        <input
-                          readOnly
-                          value={url}
-                          className="flex-1 bg-white text-sm text-gray-700 border border-gray-200 rounded-lg px-3 py-2 outline-none cursor-text focus:border-indigo-300"
-                          onFocus={e => e.target.select()}
-                        />
-
-                        <span className={`px-3 py-1 text-[10px] sm:text-xs font-bold rounded-full uppercase tracking-wider whitespace-nowrap ${review.isSubmitted
-                          ? "bg-green-100 text-green-700"
-                          : "bg-yellow-100 text-yellow-700"
-                          }`}>
-                          {review.isSubmitted ? "Submitted" : "Pending"}
-                        </span>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => copyLink(review.token)}
-                            className={`px-4 py-2 rounded-lg text-sm font-semibold border transition shrink-0 ${copiedToken === review.token
-                              ? "bg-green-500 border-green-500 text-white"
-                              : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
-                              }`}
-                          >
-                            {copiedToken === review.token ? "Copied!" : "Copy Link"}
-                          </button>
-
-                          {review.isSubmitted && (
-                            <button
-                              onClick={() => {
-                                setSelectedHodReview(review);
-                                setShowHodModal(true);
-                              }}
-                              className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition"
-                            >
-                              Feedback
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <div className="flex justify-end mt-8">
-                <button
-                  onClick={() => setShowHodLinksListModal(false)}
-                  className="px-6 py-2 bg-gray-900 text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition shadow-lg shadow-gray-200"
-                >
-                  Done
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
