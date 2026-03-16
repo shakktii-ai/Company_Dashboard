@@ -17,7 +17,10 @@ export default function EmployeesPage() {
     password: "",
     role: "",
   });
-
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [employeeAssessments, setEmployeeAssessments] = useState([]);
+  const [assessmentLoading, setAssessmentLoading] = useState(false);
   useEffect(() => {
     loadEmployees();
   }, []);
@@ -46,7 +49,29 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   }
+  async function handleViewEmployee(emp) {
+    try {
+      setSelectedEmployee(emp);
+      setShowViewModal(true);
+      setAssessmentLoading(true);
 
+      const res = await fetch(`/api/admin/viewEmpAssessments?employeeId=${emp._id}`, {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        console.log("Assessments:", data.assessments);
+        setEmployeeAssessments(data.assessments || []);
+      }
+
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setAssessmentLoading(false);
+    }
+  }
   async function handleCreate(e) {
     e.preventDefault();
 
@@ -117,7 +142,7 @@ export default function EmployeesPage() {
                   <th className="py-2 pr-4">Name</th>
                   <th className="py-2 pr-4">Email</th>
                   <th className="py-2 pr-4">Role</th>
-                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Action</th>
 
                 </tr>
               </thead>
@@ -140,9 +165,12 @@ export default function EmployeesPage() {
 
                     {/* Status */}
                     <td className="py-3 pr-4">
-                      <span className="px-2 py-1 rounded-full text-xs bg-green-50 text-green-700">
-                        Active
-                      </span>
+                      <button
+                        onClick={() => handleViewEmployee(emp)}
+                        className="px-3 py-1 bg-indigo-600 text-white text-xs rounded hover:bg-indigo-700"
+                      >
+                        View
+                      </button>
                     </td>
 
                     {/* Culture Interview */}
@@ -254,7 +282,77 @@ export default function EmployeesPage() {
 
           </div>
         )}
+        {showViewModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
 
+            <div className="bg-white w-full max-w-lg rounded-lg shadow-lg p-6">
+
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold">
+                  {selectedEmployee?.name} Assessments
+                </h3>
+
+                <button
+                  onClick={() => setShowViewModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {assessmentLoading ? (
+                <p className="text-sm text-gray-500">Loading assessments...</p>
+              ) : employeeAssessments.length === 0 ? (
+                <p className="text-sm text-gray-400">No assessments assigned</p>
+              ) : (
+
+                <div className="space-y-3">
+
+                  {employeeAssessments.map((ass) => (
+                    <div
+                      key={ass._id}
+                      className="flex justify-between items-center border p-3 rounded"
+                    >
+                      <div>
+                        <p className="font-medium text-sm">
+                          {ass.title || "Assessment"}
+                        </p>
+
+                        {/* <p className="text-xs text-gray-500">
+        Started: {ass.startedAt ? new Date(ass.startedAt).toLocaleDateString() : "-"}
+      </p>
+
+      {ass.completedAt && (
+        <p className="text-xs text-gray-500">
+          Completed: {new Date(ass.completedAt).toLocaleDateString()}
+        </p>
+      )} */}
+
+                        {ass.score !== null && (
+                          <p className="text-xs text-gray-500">
+                            Score: {ass.score}%
+                          </p>
+                        )}
+                      </div>
+
+                      <span
+                        className={`text-xs px-2 py-1 rounded-full ${ass.status === "completed"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
+                          }`}
+                      >
+                        {ass.status === "completed" ? "Completed" : "Pending"}
+                      </span>
+
+                    </div>
+                  ))}
+
+                </div>
+              )}
+
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

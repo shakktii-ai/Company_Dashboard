@@ -2192,7 +2192,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { IoMdCheckmarkCircleOutline } from "react-icons/io";
-import { MdLogout } from "react-icons/md";
+import { MdLogout, MdOutlineAssessment } from "react-icons/md";
 import CompanyProfileModal from "../../components/CompanyProfileModal";
 import CreateInterviewWizard from "../../components/createInterviewWizard";
 import Employee from '../../components/employees';
@@ -2200,6 +2200,7 @@ import Assessment from '../../components/EmployeeAssessment';
 import Link from "next/link";
 import { HiChevronDown } from 'react-icons/hi';
 import { FiUser, FiGrid, FiMic, FiFileText, FiPlus, FiUsers, FiLink, FiBriefcase, FiAward, FiCalendar, FiEdit2, FiEye, FiSearch, FiCheckCircle, FiXCircle, FiBell } from "react-icons/fi";
+import { FaRegUser } from "react-icons/fa";
 export default function AdminIndex() {
   const router = useRouter();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -2924,13 +2925,13 @@ export default function AdminIndex() {
               onClick={() => setActiveTab("employee")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'employee' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
-              <FiLink className="text-lg" /> Employee
+              <FaRegUser className="text-lg" /> Employee
             </button>
              <button 
               onClick={() => setActiveTab("assessment")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'assessment' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
-              <FiLink className="text-lg" /> Assessment
+              <MdOutlineAssessment className="text-lg" /> Assessment
             </button>
             <button 
               onClick={() => setActiveTab("hod-links")}
@@ -3280,7 +3281,7 @@ export default function AdminIndex() {
                               </span>
                             ) : (
                               <span className="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
-                                <FiXCircle className="text-red-500" size={14} /> Reject
+                                 NA
                               </span>
                             )}
                           </td>
