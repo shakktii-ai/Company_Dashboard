@@ -158,9 +158,9 @@ if (data.admin.role !== "admin") {
       </div>
 
       {/* Footer */}
-      <p className="absolute bottom-4 text-xs text-gray-400">
-        © 2026 Employee Hub. All rights reserved.
-      </p>
+      // <p className="absolute bottom-4 text-xs text-gray-400">
+      //   © 2026 Employee Hub. All rights reserved.
+      // </p>
 
     </div>
   );
