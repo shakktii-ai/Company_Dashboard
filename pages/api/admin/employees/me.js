@@ -15,7 +15,9 @@ export default async function handler(req,res){
   res.json({
     ok:true,
     user:{
+       _id: employee._id,        // ✅ ADD
       name: employee.name,
+      email: employee.email,   // ✅ ADD
       role: employee.role
     }
   });

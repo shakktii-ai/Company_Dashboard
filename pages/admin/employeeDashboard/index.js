@@ -76,17 +76,13 @@ export default function EmployeeDashboard() {
 
     <div className="flex min-h-screen bg-gray-100">
 
-      {/* ================= MOBILE OVERLAY ================= */}
-
+      {/* MOBILE OVERLAY*/}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
-
-      {/* ================= SIDEBAR ================= */}
-
       <aside
         className={`
   fixed md:relative
@@ -163,109 +159,48 @@ export default function EmployeeDashboard() {
               Logout
             </button>
           </nav>
-
         </div>
-
-        {/* <div className="p-4 border-t border-teal-600">
-
-          <button
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="flex items-center gap-2 text-sm hover:text-red-300"
-          >
-
-            <FiLogOut/>
-
-            Logout
-
-          </button>
-
-        </div> */}
-
       </aside>
-
-
-      {/* ================= MAIN ================= */}
-
       <div className="flex-1 flex flex-col">
-
-        {/* ================= HEADER ================= */}
-
         <header className="bg-white shadow-sm px-4 md:px-6 py-4 flex justify-between items-center">
-
           <div className="flex items-center gap-4">
-
             {/* BURGER MENU */}
-
             <button
               className="md:hidden"
               onClick={() => setSidebarOpen(true)}
             >
               <FiMenu size={24} />
             </button>
-
             <div>
-
               <h2 className="text-xl font-semibold text-gray-800">
                 {pageTitle[activeTab]}
               </h2>
-
             </div>
-
           </div>
-
           <div className="flex items-center gap-6">
-
-            {/* <FaBell className="text-gray-500 text-lg cursor-pointer" /> */}
-
             <div className="flex items-center gap-3">
-
               <div className="w-9 h-9 bg-teal-600 rounded-full flex items-center justify-center text-white">
                 {user?.name?.charAt(0) || "U"}
               </div>
-
               <div className="">
-
                 <p className="text-sm font-medium">
                   {user?.name || "Employee"}
                 </p>
-
                 <p className="text-xs text-gray-500">
                   {user?.role || ""}
                 </p>
-
               </div>
-
             </div>
           </div>
-
         </header>
-
-
-        {/* ================= CONTENT ================= */}
-
         <main className="p-4 md:p-6 space-y-6">
-
-          {/* Stats */}
-
-
-
-          {/* Pages */}
-
           <div className="bg-white rounded-xl shadow p-4">
-
             {activeTab === "assessments" && <AssessmentsPage />}
-
             {activeTab === "report" && <Report />}
-
             {activeTab === "video" && <Video />}
-
           </div>
-
         </main>
-
       </div>
-
     </div>
   );
 }

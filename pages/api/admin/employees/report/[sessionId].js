@@ -9,11 +9,15 @@ export default async function handler(req, res) {
   if (!user) return res.status(401).json({ ok: false });
 
   const { sessionId } = req.query;
+  const { employeeId } = req.query; // Add employeeId parameter
 
   try {
+    // If employeeId is provided, use it; otherwise use admin's ID for backward compatibility
+    const targetEmployeeId = employeeId || user.adminId;
+
     const session = await Session.findOne({
       _id: sessionId,
-      employeeId: user.adminId,
+      employeeId: targetEmployeeId,
       status: "completed",
     }).populate("assessmentId", "title role jd kpi kra");
 

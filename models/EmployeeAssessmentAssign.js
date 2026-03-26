@@ -15,13 +15,26 @@ const AssignSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: "EmployeeAssessment",
   },
+  //for psychometric test.
+ linkId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "CompanyPsychometricLink",
+  },
 
+  type: {
+    type: String,
+    enum: ["assessment", "psychometric"],
+    default: "assessment",
+  },
   status: {
     type: String,
     enum: ["pending", "completed"],
     default: "pending",
   },
-
+resultId: {
+  type: mongoose.Schema.Types.ObjectId,
+  ref: "CompanyPsychometricResponse"
+},
   createdAt: {
     type: Date,
     default: Date.now,

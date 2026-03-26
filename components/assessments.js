@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import EmployeeReportModal from "../components/EmployeeReportModal";
 import { FiArrowRight, FiClipboard, FiCheckCircle, FiClock } from "react-icons/fi";
 import { FaClock, FaCalendarAlt } from "react-icons/fa";
 
 export default function EmployeeAssessments() {
 
-
+  const router = useRouter();
   const [selectedSession, setSelectedSession] = useState(null);
   const [list, setList] = useState([]);
   const total = list.length;
@@ -25,7 +26,7 @@ export default function EmployeeAssessments() {
 
     const res = await fetch("/api/admin/employees/assessments", {
       credentials: "include",
-       cache: "no-store"
+      cache: "no-store"
     });
 
     const data = await res.json();
@@ -86,8 +87,11 @@ export default function EmployeeAssessments() {
 
           {list.map(item => {
 
-            const a = item.assessmentId;
-
+            const isPsychometric = item.type === "psychometric";
+            const a = isPsychometric ? item.linkId : item.assessmentId;
+            if (item.type === "psychometric") {
+              console.log("Psychometric linkId:", item.linkId);
+            }
             return (
 
               <div
@@ -101,7 +105,7 @@ export default function EmployeeAssessments() {
                   <div className="flex items-center gap-3">
 
                     <h3 className="font-semibold text-gray-800">
-                      {a.title}
+                      {isPsychometric ? "Psychometric Test" : a?.title || "Assessment"}
                     </h3>
 
                     <span
@@ -117,13 +121,13 @@ export default function EmployeeAssessments() {
                   </div>
 
                   <p className="text-sm text-gray-500 mt-1">
-                    Role: {a.role}
+                    {isPsychometric ? '' : `Role: ${a?.role || "-"}`}
                   </p>
 
                   {/* META INFO */}
                   <div className="flex items-center gap-6 mt-2 text-sm text-gray-500">
 
-                    {item.status === "completed" && (
+                    {/* {item.status === "completed" && (
                       <>
                         <div className="flex items-center gap-2">
                           <FaCalendarAlt className="text-xs" />
@@ -136,7 +140,7 @@ export default function EmployeeAssessments() {
                           Score: {item.latestScore ?? "Available in report"}
                         </span>
                       </>
-                    )}
+                    )} */}
 
 
 
@@ -146,21 +150,28 @@ export default function EmployeeAssessments() {
                 {/* RIGHT BUTTON */}
 
                 <div className="mt-4 md:mt-0">
-
                   {item.status === "pending" && (
-
                     <button
-                      onClick={() =>
-                        window.location.href = `/interviewLink/${a.slug}`
-                      }
+                      onClick={() => {
+                        if (isPsychometric) {
+                          if (!item.linkId?._id) {
+                            console.error("Missing linkId");
+                            return;
+                          }
+                          router.push({
+                            pathname: `/psychometricTest/${a.slug}/psychometricTest`,
+                            query: { linkId: item.linkId._id ,assignmentId: item._id}
+                          });
+                        } else {
+                          router.push(`/interviewLink/${a.slug}`);
+                        }
+                      }}
                       className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition"
                     >
                       Start Assessment
                       <FiArrowRight />
                     </button>
-
                   )}
-
                   {/* {item.status === "completed" && (
 
                     <button
@@ -183,15 +194,15 @@ export default function EmployeeAssessments() {
         </div>
 
       </div>
-        {/* REPORT MODAL */}
-    {selectedSession && (
-      <EmployeeReportModal
-        sessionId={selectedSession}
-        onClose={() => setSelectedSession(null)}
-      />
-    )}
+      {/* REPORT MODAL */}
+      {selectedSession && (
+        <EmployeeReportModal
+          sessionId={selectedSession}
+          onClose={() => setSelectedSession(null)}
+        />
+      )}
     </>
-    
+
   );
 
 }

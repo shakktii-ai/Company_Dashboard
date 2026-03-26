@@ -2,11 +2,11 @@ import dbConnect from "../../../../lib/db";
 import Admin from "../../../../models/admin";
 import bcrypt from "bcryptjs";
 import { verifyAdmin } from "../../../../lib/auth";
-
+import { verifyTokenFromReq } from "../../../../lib/verifyToken";
 export default async function handler(req, res) {
   await dbConnect();
 
-  const admin = await verifyAdmin(req, res);
+  const admin = await verifyTokenFromReq(req, res);
   if (!admin) return;
 
   const { id } = req.query;

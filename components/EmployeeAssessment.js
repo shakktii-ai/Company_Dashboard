@@ -4,512 +4,522 @@ import { IoIosArrowBack } from "react-icons/io";
 
 export default function EmployeeAssessmentsAdmin() {
 
-const [assessments,setAssessments]=useState([]);
-const [employees,setEmployees]=useState([]);
+    const [assessments, setAssessments] = useState([]);
+    const [employees, setEmployees] = useState([]);
 
-const [showCreate,setShowCreate]=useState(false);
-const [showAssign,setShowAssign]=useState(false);
-const [editId,setEditId]=useState(null);
+    const [showCreate, setShowCreate] = useState(false);
+    const [showAssign, setShowAssign] = useState(false);
+    const [editId, setEditId] = useState(null);
 
-const [expanded,setExpanded]=useState({});
+    const [expanded, setExpanded] = useState({});
 
-const [form,setForm]=useState({
-title:"",
-role:"",
-jd:"",
-kpi:"",
-kra:""
-});
+    const [form, setForm] = useState({
+        title: "",
+        role: "",
+        jd: "",
+        kpi: "",
+        kra: ""
+    });
 
-const [assignForm,setAssignForm]=useState({
-employeeId:"",
-assessmentId:""
-});
+    const [assignForm, setAssignForm] = useState({
+        employeeId: "",
+        assessmentId: ""
+    });
+
+    useEffect(() => {
+        loadAssessments();
+        loadEmployees();
+    }, []);
 
 useEffect(()=>{
-loadAssessments();
-loadEmployees();
+  loadAssessments();
+  loadEmployees();
+
+  const interval = setInterval(() => {
+    loadAssessments();
+  }, 5000); // every 5 sec
+
+  return () => clearInterval(interval);
+
 },[]);
+    /* ================= LOAD ================= */
 
+    async function loadAssessments() {
 
-/* ================= LOAD ================= */
+        const res = await fetch("/api/admin/employee-assessments", { credentials: "include" });
+        const data = await res.json();
 
-async function loadAssessments(){
+        if (data.ok) setAssessments(data.list || []);
 
-const res=await fetch("/api/admin/employee-assessments",{credentials:"include"});
-const data=await res.json();
+    }
 
-if(data.ok) setAssessments(data.list||[]);
+    async function loadEmployees() {
 
-}
+        const res = await fetch("/api/admin/employees", { credentials: "include" });
+        const data = await res.json();
 
-async function loadEmployees(){
+        if (data.ok) setEmployees(data.employees || []);
 
-const res=await fetch("/api/admin/employees",{credentials:"include"});
-const data=await res.json();
+    }
 
-if(data.ok) setEmployees(data.employees||[]);
 
-}
+    /* ================= CREATE ================= */
 
+    async function handleCreate(e) {
 
-/* ================= CREATE ================= */
+        e.preventDefault();
 
-async function handleCreate(e){
+        const payload = {
+            ...form,
+            kpi: form.kpi.split(",").map(i => i.trim()),
+            kra: form.kra.split(",").map(i => i.trim())
+        };
 
-e.preventDefault();
+        const url = editId
+            ? `/api/admin/employee-assessments/${editId}`
+            : "/api/admin/employee-assessments";
 
-const payload={
-...form,
-kpi:form.kpi.split(",").map(i=>i.trim()),
-kra:form.kra.split(",").map(i=>i.trim())
-};
+        const method = editId ? "PUT" : "POST";
 
-const url=editId
-?`/api/admin/employee-assessments/${editId}`
-:"/api/admin/employee-assessments";
+        const res = await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(payload)
+        });
 
-const method=editId?"PUT":"POST";
+        const data = await res.json();
 
-const res=await fetch(url,{
-method,
-headers:{"Content-Type":"application/json"},
-credentials:"include",
-body:JSON.stringify(payload)
-});
+        if (data.ok) {
 
-const data=await res.json();
+            setShowCreate(false);
+            setEditId(null);
 
-if(data.ok){
+            setForm({
+                title: "",
+                role: "",
+                jd: "",
+                kpi: "",
+                kra: ""
+            });
 
-setShowCreate(false);
-setEditId(null);
+            loadAssessments();
 
-setForm({
-title:"",
-role:"",
-jd:"",
-kpi:"",
-kra:""
-});
+        }
 
-loadAssessments();
+    }
 
-}
 
-}
+    /* ================= ASSIGN ================= */
 
+    function openAssign(id) {
 
-/* ================= ASSIGN ================= */
+        setAssignForm({
+            ...assignForm,
+            assessmentId: id
+        });
 
-function openAssign(id){
+        setShowAssign(true);
 
-setAssignForm({
-...assignForm,
-assessmentId:id
-});
+    }
 
-setShowAssign(true);
+    async function handleAssign() {
 
-}
+        const res = await fetch("/api/admin/employee-assessments/assign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(assignForm)
+        });
 
-async function handleAssign(){
+        const data = await res.json();
 
-const res=await fetch("/api/admin/employee-assessments/assign",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-credentials:"include",
-body:JSON.stringify(assignForm)
-});
+        if (data.ok) {
 
-const data=await res.json();
+            alert("Assigned successfully");
+            setShowAssign(false);
+            loadAssessments();
+        }
 
-if(data.ok){
+    }
 
-alert("Assigned successfully");
-setShowAssign(false);
 
-}
+    /* ================= DELETE ================= */
 
-}
+    async function handleDelete(id) {
 
+        if (!confirm("Archive this assessment?")) return;
 
-/* ================= DELETE ================= */
+        const res = await fetch(`/api/admin/employee-assessments/${id}`, {
+            method: "DELETE",
+            credentials: "include"
+        });
 
-async function handleDelete(id){
+        const data = await res.json();
 
-if(!confirm("Archive this assessment?")) return;
+        if (data.ok) loadAssessments();
 
-const res=await fetch(`/api/admin/employee-assessments/${id}`,{
-method:"DELETE",
-credentials:"include"
-});
+    }
 
-const data=await res.json();
 
-if(data.ok) loadAssessments();
+    /* ================= EDIT ================= */
 
-}
+    function openEdit(a) {
 
+        setEditId(a._id);
 
-/* ================= EDIT ================= */
+        setForm({
+            title: a.title,
+            role: a.role,
+            jd: a.jd,
+            kpi: a.kpi?.join(", "),
+            kra: a.kra?.join(", ")
+        });
 
-function openEdit(a){
+        setShowCreate(true);
 
-setEditId(a._id);
+    }
 
-setForm({
-title:a.title,
-role:a.role,
-jd:a.jd,
-kpi:a.kpi?.join(", "),
-kra:a.kra?.join(", ")
-});
 
-setShowCreate(true);
+    /* ================= TOGGLE EXPAND ================= */
 
-}
+    function toggleExpand(id) {
 
+        setExpanded(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
 
-/* ================= TOGGLE EXPAND ================= */
+    }
 
-function toggleExpand(id){
 
-setExpanded(prev=>({
-...prev,
-[id]:!prev[id]
-}));
+    /* ================= UI ================= */
 
-}
+    return (
 
+        <div className="min-h-screen bg-gray-50 p-6">
 
-/* ================= UI ================= */
+            <div className="max-w-6xl mx-auto">
 
-return(
 
-<div className="min-h-screen bg-gray-50 p-6">
+                {/* HEADER */}
 
-<div className="max-w-6xl mx-auto">
+                <div className="flex justify-between items-center mb-6">
 
+                    <div>
 
-{/* HEADER */}
+                        <h1 className="text-2xl font-bold text-gray-900">
+                            Employee Assessment
+                        </h1>
 
-<div className="flex justify-between items-center mb-6">
+                        <p className="text-sm text-gray-500 mt-1">
+                            Create and assign internal assessments to employees
+                        </p>
 
-<div>
+                    </div>
 
-<h1 className="text-2xl font-bold text-gray-900">
-Employee Assessment
-</h1>
+                    <button
+                        onClick={() => setShowCreate(true)}
+                        className="py-2.5 px-5 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition shadow-sm"
+                    >
+                        + Create Assessment
+                    </button>
 
-<p className="text-sm text-gray-500 mt-1">
-Create and assign internal assessments to employees
-</p>
+                </div>
 
-</div>
 
-<button
-onClick={()=>setShowCreate(true)}
-className="py-2.5 px-5 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition shadow-sm"
->
-+ Create Assessment
-</button>
 
-</div>
+                {/* ================= CARDS ================= */}
 
+                <div className="grid md:grid-cols-2 gap-6">
 
+                    {assessments.map(a => {
 
-{/* ================= CARDS ================= */}
+                        const isExpanded = expanded[a._id];
 
-<div className="grid md:grid-cols-2 gap-6">
+                        return (
 
-{assessments.map(a=>{
+                            <div
+                                key={a._id}
+                                className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition flex flex-col h-full"
+                            >
 
-const isExpanded=expanded[a._id];
 
-return(
+                                {/* HEADER */}
 
-<div
-key={a._id}
-className="bg-white rounded-xl border shadow-sm hover:shadow-lg transition flex flex-col h-full"
->
+                                <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-4 min-h-[80px]">
 
+                                    <h3 className="font-semibold text-lg leading-tight">
+                                        {a.title}
+                                    </h3>
 
-{/* HEADER */}
+                                    <p className="text-sm opacity-90">
+                                        Role: {a.role}
+                                    </p>
 
-<div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-4 min-h-[80px]">
+                                </div>
 
-<h3 className="font-semibold text-lg leading-tight">
-{a.title}
-</h3>
 
-<p className="text-sm opacity-90">
-Role: {a.role}
-</p>
 
-</div>
+                                {/* CONTENT */}
 
+                                <div className="p-4 space-y-4 flex-grow">
 
 
-{/* CONTENT */}
+                                    {/* JOB DESCRIPTION */}
 
-<div className="p-4 space-y-4 flex-grow">
+                                    {a.jd && (
 
+                                        <div>
 
-{/* JOB DESCRIPTION */}
+                                            <p className="text-xs font-semibold text-gray-500 mb-1">
+                                                JOB DESCRIPTION
+                                            </p>
 
-{a.jd&&(
+                                            <p className={`text-sm text-gray-700 ${isExpanded ? "" : "line-clamp-3"}`}>
+                                                {a.jd}
+                                            </p>
 
-<div>
+                                        </div>
 
-<p className="text-xs font-semibold text-gray-500 mb-1">
-JOB DESCRIPTION
-</p>
+                                    )}
 
-<p className={`text-sm text-gray-700 ${isExpanded?"":"line-clamp-3"}`}>
-{a.jd}
-</p>
 
-</div>
 
-)}
+                                    {/* KPI */}
 
+                                    {a.kpi?.length > 0 && (
 
+                                        <div>
 
-{/* KPI */}
+                                            <p className="text-xs font-semibold text-gray-500 mb-1">
+                                                KPI
+                                            </p>
 
-{a.kpi?.length>0&&(
+                                            <ul className="text-sm text-gray-700 list-disc list-inside">
 
-<div>
+                                                {(isExpanded ? a.kpi : a.kpi.slice(0, 6)).map((item, i) => (
+                                                    <li key={i}>{item}</li>
+                                                ))}
 
-<p className="text-xs font-semibold text-gray-500 mb-1">
-KPI
-</p>
+                                            </ul>
 
-<ul className="text-sm text-gray-700 list-disc list-inside">
+                                        </div>
 
-{(isExpanded?a.kpi:a.kpi.slice(0,6)).map((item,i)=>(
-<li key={i}>{item}</li>
-))}
+                                    )}
 
-</ul>
 
-</div>
 
-)}
+                                    {/* KRA */}
 
+                                    {a.kra?.length > 0 && (
 
+                                        <div>
 
-{/* KRA */}
+                                            <p className="text-xs font-semibold text-gray-500 mb-1">
+                                                KRA
+                                            </p>
 
-{a.kra?.length>0&&(
+                                            <ul className="text-sm text-gray-700 list-disc list-inside">
 
-<div>
+                                                {(isExpanded ? a.kra : a.kra.slice(0, 6)).map((item, i) => (
+                                                    <li key={i}>{item}</li>
+                                                ))}
 
-<p className="text-xs font-semibold text-gray-500 mb-1">
-KRA
-</p>
+                                            </ul>
 
-<ul className="text-sm text-gray-700 list-disc list-inside">
+                                        </div>
 
-{(isExpanded?a.kra:a.kra.slice(0,6)).map((item,i)=>(
-<li key={i}>{item}</li>
-))}
+                                    )}
 
-</ul>
 
-</div>
 
-)}
+                                    {/* READ MORE BUTTON */}
 
+                                    {(a.jd?.length > 300 || a.kpi?.length > 6 || a.kra?.length > 6) && (
 
+                                        <button
+                                            onClick={() => toggleExpand(a._id)}
+                                            className="text-gray-600 text-sm font-medium hover:underline"
+                                        >
+                                            {isExpanded ? "Show Less" : "Read More"}
+                                        </button>
 
-{/* READ MORE BUTTON */}
+                                    )}
 
-{(a.jd?.length>300||a.kpi?.length>6||a.kra?.length>6)&&(
+                                </div>
 
-<button
-onClick={()=>toggleExpand(a._id)}
-className="text-gray-600 text-sm font-medium hover:underline"
->
-{isExpanded?"Show Less":"Read More"}
-</button>
 
-)}
 
-</div>
+                                {/* FOOTER */}
 
+                                <div className="border-t p-4 flex gap-3 mt-auto">
 
+                                    <button
+                                        onClick={() => openAssign(a._id)}
+                                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-md text-sm"
+                                    >
+                                        Assign
+                                    </button>
 
-{/* FOOTER */}
+                                    <button
+                                        onClick={() => openEdit(a)}
+                                        className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-md text-sm"
+                                    >
+                                        Edit
+                                    </button>
 
-<div className="border-t p-4 flex gap-3 mt-auto">
+                                    <button
+                                        onClick={() => handleDelete(a._id)}
+                                        className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-md text-sm"
+                                    >
+                                        Delete
+                                    </button>
 
-<button
-onClick={()=>openAssign(a._id)}
-className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-md text-sm"
->
-Assign
-</button>
+                                </div>
 
-<button
-onClick={()=>openEdit(a)}
-className="flex-1 bg-amber-500 hover:bg-amber-600 text-white py-2 rounded-md text-sm"
->
-Edit
-</button>
+                            </div>
 
-<button
-onClick={()=>handleDelete(a._id)}
-className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-md text-sm"
->
-Delete
-</button>
+                        );
 
-</div>
+                    })}
 
-</div>
+                </div>
 
-);
 
-})}
+                {/* ================= CREATE MODAL ================= */}
 
-</div>
+                {showCreate && (
 
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-{/* ================= CREATE MODAL ================= */}
+                        <div className="bg-white p-6 rounded-lg w-96">
 
-{showCreate&&(
+                            <h3 className="text-lg font-semibold mb-4">
+                                {editId ? "Edit Assessment" : "Create Assessment"}
+                            </h3>
 
-<div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+                            <form onSubmit={handleCreate} className="space-y-3">
 
-<div className="bg-white p-6 rounded-lg w-96">
+                                <input
+                                    placeholder="Title"
+                                    value={form.title}
+                                    onChange={e => setForm({ ...form, title: e.target.value })}
+                                    className="w-full border p-2 rounded"
+                                />
 
-<h3 className="text-lg font-semibold mb-4">
-{editId?"Edit Assessment":"Create Assessment"}
-</h3>
+                                <input
+                                    placeholder="Role"
+                                    value={form.role}
+                                    onChange={e => setForm({ ...form, role: e.target.value })}
+                                    className="w-full border p-2 rounded"
+                                />
 
-<form onSubmit={handleCreate} className="space-y-3">
+                                <textarea
+                                    placeholder="Job Description"
+                                    value={form.jd}
+                                    onChange={e => setForm({ ...form, jd: e.target.value })}
+                                    className="w-full border p-2 rounded"
+                                />
 
-<input
-placeholder="Title"
-value={form.title}
-onChange={e=>setForm({...form,title:e.target.value})}
-className="w-full border p-2 rounded"
-/>
+                                <input
+                                    placeholder="KPI (comma separated)"
+                                    value={form.kpi}
+                                    onChange={e => setForm({ ...form, kpi: e.target.value })}
+                                    className="w-full border p-2 rounded"
+                                />
 
-<input
-placeholder="Role"
-value={form.role}
-onChange={e=>setForm({...form,role:e.target.value})}
-className="w-full border p-2 rounded"
-/>
+                                <input
+                                    placeholder="KRA (comma separated)"
+                                    value={form.kra}
+                                    onChange={e => setForm({ ...form, kra: e.target.value })}
+                                    className="w-full border p-2 rounded"
+                                />
 
-<textarea
-placeholder="Job Description"
-value={form.jd}
-onChange={e=>setForm({...form,jd:e.target.value})}
-className="w-full border p-2 rounded"
-/>
+                                <div className="flex justify-end gap-2 pt-3">
 
-<input
-placeholder="KPI (comma separated)"
-value={form.kpi}
-onChange={e=>setForm({...form,kpi:e.target.value})}
-className="w-full border p-2 rounded"
-/>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowCreate(false)}
+                                        className="px-4 py-2 bg-gray-200 rounded"
+                                    >
+                                        Cancel
+                                    </button>
 
-<input
-placeholder="KRA (comma separated)"
-value={form.kra}
-onChange={e=>setForm({...form,kra:e.target.value})}
-className="w-full border p-2 rounded"
-/>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-indigo-600 text-white rounded"
+                                    >
+                                        Create
+                                    </button>
 
-<div className="flex justify-end gap-2 pt-3">
+                                </div>
 
-<button
-type="button"
-onClick={()=>setShowCreate(false)}
-className="px-4 py-2 bg-gray-200 rounded"
->
-Cancel
-</button>
+                            </form>
 
-<button
-type="submit"
-className="px-4 py-2 bg-indigo-600 text-white rounded"
->
-Create
-</button>
+                        </div>
 
-</div>
+                    </div>
 
-</form>
+                )}
 
-</div>
 
-</div>
 
-)}
+                {/* ================= ASSIGN MODAL ================= */}
 
+                {showAssign && (
 
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
 
-{/* ================= ASSIGN MODAL ================= */}
+                        <div className="bg-white p-6 rounded-lg w-96">
 
-{showAssign&&(
+                            <h3 className="text-lg font-semibold mb-4">
+                                Assign to Employee
+                            </h3>
 
-<div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+                            <select
+                                className="w-full border p-2 mb-3"
+                                onChange={e => setAssignForm({ ...assignForm, employeeId: e.target.value })}
+                            >
 
-<div className="bg-white p-6 rounded-lg w-96">
+                                <option>Select Employee</option>
 
-<h3 className="text-lg font-semibold mb-4">
-Assign to Employee
-</h3>
+                                {employees.map(emp => (
+                                    <option key={emp._id} value={emp._id}>
+                                        {emp.name}
+                                    </option>
+                                ))}
 
-<select
-className="w-full border p-2 mb-3"
-onChange={e=>setAssignForm({...assignForm,employeeId:e.target.value})}
->
+                            </select>
 
-<option>Select Employee</option>
+                            <div className="flex justify-end gap-2">
 
-{employees.map(emp=>(
-<option key={emp._id} value={emp._id}>
-{emp.name}
-</option>
-))}
+                                <button
+                                    onClick={() => setShowAssign(false)}
+                                    className="px-4 py-2 bg-gray-200 rounded"
+                                >
+                                    Cancel
+                                </button>
 
-</select>
+                                <button
+                                    onClick={handleAssign}
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded"
+                                >
+                                    Assign
+                                </button>
 
-<div className="flex justify-end gap-2">
+                            </div>
 
-<button
-onClick={()=>setShowAssign(false)}
-className="px-4 py-2 bg-gray-200 rounded"
->
-Cancel
-</button>
+                        </div>
 
-<button
-onClick={handleAssign}
-className="px-4 py-2 bg-indigo-600 text-white rounded"
->
-Assign
-</button>
+                    </div>
 
-</div>
+                )}
 
-</div>
+            </div>
 
-</div>
+        </div>
 
-)}
-
-</div>
-
-</div>
-
-);
+    );
 
 }

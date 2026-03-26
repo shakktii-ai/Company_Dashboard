@@ -32,6 +32,7 @@ if (!data.ok) {
       localStorage.setItem("companyId", data.company.id);
       localStorage.setItem("userId", data.admin.id);
       localStorage.setItem("role", data.admin.role);
+      localStorage.setItem("user", JSON.stringify(data.admin));
 
       // ✅ Employee / HOD / Leader
       // if (data.admin.role !== "admin") {

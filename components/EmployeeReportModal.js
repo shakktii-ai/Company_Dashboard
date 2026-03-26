@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
 
-export default function EmployeeReportModal({ sessionId, onClose }) {
+export default function EmployeeReportModal({ sessionId, onClose,employeeId }) {
   const [report, setReport] = useState(null);
 
   useEffect(() => {
@@ -10,7 +10,11 @@ export default function EmployeeReportModal({ sessionId, onClose }) {
   }, [sessionId]);
 
   async function loadReport() {
-    const res = await fetch(`/api/admin/employees/report/${sessionId}`);
+    // const res = await fetch(`/api/admin/employees/report/${sessionId}`);
+       const url = employeeId
+      ? `/api/admin/employees/report/${sessionId}?employeeId=${employeeId}`
+      : `/api/admin/employees/report/${sessionId}`;
+    const res = await fetch(url);
     const data = await res.json();
     if (data.ok) setReport(data.session);
   }
@@ -18,7 +22,7 @@ export default function EmployeeReportModal({ sessionId, onClose }) {
   if (!report)
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-        <div className="bg-white p-6 rounded-xl shadow">Loading report...</div>
+        <div className="bg-white p-6 rounded-xl shadow">report not found.</div>
       </div>
     );
 
@@ -29,7 +33,7 @@ export default function EmployeeReportModal({ sessionId, onClose }) {
       <div className="bg-gray-100 w-full max-w-5xl h-[85vh] rounded-2xl shadow-xl flex flex-col overflow-hidden">
 
         {/* HEADER */}
-        <div className="bg-teal-700 text-white px-6 py-4 flex items-center justify-between">
+        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-4 flex items-center justify-between">
 
           <div>
             <h1 className="text-lg md:text-xl font-semibold">
@@ -42,7 +46,7 @@ export default function EmployeeReportModal({ sessionId, onClose }) {
 
           <button
             onClick={onClose}
-            className="p-2 rounded hover:bg-teal-600 transition"
+            className="p-2 rounded hover:bg-blue-600 transition"
           >
             <FiX size={20} />
           </button>
@@ -153,14 +157,14 @@ export default function EmployeeReportModal({ sessionId, onClose }) {
 
           <button
             onClick={onClose}
-            className="px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100"
+            className="px-4 py-2 border rounded-md text-white bg-gradient-to-r from-blue-600 to-indigo-700"
           >
             Close
           </button>
 
-          <button className="px-4 py-2 bg-teal-600 text-white rounded-md hover:bg-teal-700">
+          {/* <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-md hover:bg-teal-700">
             Download Report
-          </button>
+          </button> */}
 
         </div>
 

@@ -2,6 +2,7 @@ import dbConnect from "../../../../lib/db";
 import Assign from "../../../../models/EmployeeAssessmentAssign";
 import { verifyTokenFromReq } from "../../../../lib/verifyToken";
 import '../../../../models/EmployeeAssessment';
+import "../../../../models/CompanyPsychometricLink";
 export default async function handler(req, res) {
   await dbConnect();
 
@@ -20,6 +21,7 @@ console.log("user:",user);
     })
    
       .populate("assessmentId")
+      .populate("linkId")
       .sort({ createdAt: -1 })
       .lean();
 

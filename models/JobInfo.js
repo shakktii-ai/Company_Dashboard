@@ -39,7 +39,7 @@ const JobInfoSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // 🔥 NEW CONTEXT FIELDS (AI quality depends on this)
+    
     industry: {
       type: String,
       

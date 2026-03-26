@@ -1451,7 +1451,7 @@
 
 //                 <div className="mt-8">
 
-               
+
 
 //                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
@@ -2197,6 +2197,7 @@ import CompanyProfileModal from "../../components/CompanyProfileModal";
 import CreateInterviewWizard from "../../components/createInterviewWizard";
 import Employee from '../../components/employees';
 import Assessment from '../../components/EmployeeAssessment';
+import Psychometric from "../admin/psychometricTest";
 import Link from "next/link";
 import { HiChevronDown } from 'react-icons/hi';
 import { FiUser, FiGrid, FiMic, FiFileText, FiPlus, FiUsers, FiLink, FiBriefcase, FiAward, FiCalendar, FiEdit2, FiEye, FiSearch, FiCheckCircle, FiXCircle, FiBell } from "react-icons/fi";
@@ -2629,174 +2630,174 @@ export default function AdminIndex() {
 
   const downloadFullReportPDF = (assessment, interview) => {
 
-  const doc = new jsPDF();
+    const doc = new jsPDF();
 
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 20;
 
-  let yPos = margin;
+    let yPos = margin;
 
-  const addText = (text, x, y, maxWidth) => {
-    const lines = doc.splitTextToSize(text, maxWidth);
-    doc.text(lines, x, y);
-    return y + lines.length * 6;
-  };
+    const addText = (text, x, y, maxWidth) => {
+      const lines = doc.splitTextToSize(text, maxWidth);
+      doc.text(lines, x, y);
+      return y + lines.length * 6;
+    };
 
-  /* ================= HEADER ================= */
+    /* ================= HEADER ================= */
 
-  doc.setFontSize(18);
-  doc.setFont("helvetica","bold");
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
 
-  doc.text("Candidate Evaluation Report", margin, yPos);
-
-  yPos += 10;
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica","normal");
-
-  doc.text(`Email: ${assessment.email}`, margin, yPos);
-  yPos += 6;
-
-  doc.text(`Role: ${assessment.role}`, margin, yPos);
-  yPos += 6;
-
-  doc.text(`Generated: ${new Date(assessment.createdAt).toLocaleString()}`, margin, yPos);
-  yPos += 12;
-
-  /* ================= ASSESSMENT ================= */
-
-  doc.setFontSize(14);
-  doc.setFont("helvetica","bold");
-  doc.text("Assessment Evaluation", margin, yPos);
-  yPos += 8;
-
-  doc.setFontSize(11);
-  doc.setFont("helvetica","normal");
-
-  const roleFit = assessment.reportAnalysis?.roleFit;
-
-  if (roleFit) {
-    yPos = addText(
-      `Role Fit: ${roleFit.match} - ${roleFit.explanation}`,
-      margin,
-      yPos,
-      pageWidth - margin * 2
-    );
-    yPos += 6;
-  }
-
-  /* SCORECARD */
-
-  const scores = assessment.reportAnalysis?.scores || {};
-
-  Object.entries(scores).forEach(([key,value])=>{
-    doc.text(
-      `${key.replace(/([A-Z])/g," $1")}: ${value}/10`,
-      margin,
-      yPos
-    );
-    yPos += 6;
-  });
-
-  yPos += 4;
-
-  doc.setFont("helvetica","bold");
-
-  doc.text(
-    `Overall Score: ${assessment.reportAnalysis?.overallScore || 0} / 60`,
-    margin,
-    yPos
-  );
-
-  yPos += 10;
-
-  /* SECTION EVALUATION */
-
-  const sections = assessment.reportAnalysis?.evaluationText || {};
-
-  Object.entries(sections).forEach(([key,value])=>{
-
-    if(key === "overallSummary") return;
-
-    doc.setFont("helvetica","bold");
-
-    doc.text(
-      key.replace(/([A-Z])/g," $1"),
-      margin,
-      yPos
-    );
-
-    yPos += 6;
-
-    doc.setFont("helvetica","normal");
-
-    yPos = addText(
-      value,
-      margin,
-      yPos,
-      pageWidth - margin * 2
-    );
-
-    yPos += 6;
-
-  });
-
-  if (sections.overallSummary) {
-
-    doc.setFont("helvetica","bold");
-
-    doc.text("Overall Assessment Summary", margin, yPos);
-
-    yPos += 6;
-
-    doc.setFont("helvetica","normal");
-
-    yPos = addText(
-      sections.overallSummary,
-      margin,
-      yPos,
-      pageWidth - margin * 2
-    );
+    doc.text("Candidate Evaluation Report", margin, yPos);
 
     yPos += 10;
-  }
 
-  /* ================= INTERVIEW ================= */
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
 
-  if (interview?.reportAnalysis) {
+    doc.text(`Email: ${assessment.email}`, margin, yPos);
+    yPos += 6;
 
-    if (yPos > pageHeight - 40) {
-      doc.addPage();
-      yPos = margin;
-    }
+    doc.text(`Role: ${assessment.role}`, margin, yPos);
+    yPos += 6;
+
+    doc.text(`Generated: ${new Date(assessment.createdAt).toLocaleString()}`, margin, yPos);
+    yPos += 12;
+
+    /* ================= ASSESSMENT ================= */
 
     doc.setFontSize(14);
-    doc.setFont("helvetica","bold");
-
-    doc.text("Interview Evaluation", margin, yPos);
-
+    doc.setFont("helvetica", "bold");
+    doc.text("Assessment Evaluation", margin, yPos);
     yPos += 8;
 
     doc.setFontSize(11);
-    doc.setFont("helvetica","normal");
+    doc.setFont("helvetica", "normal");
 
-    yPos = addText(
-      interview.reportAnalysis,
+    const roleFit = assessment.reportAnalysis?.roleFit;
+
+    if (roleFit) {
+      yPos = addText(
+        `Role Fit: ${roleFit.match} - ${roleFit.explanation}`,
+        margin,
+        yPos,
+        pageWidth - margin * 2
+      );
+      yPos += 6;
+    }
+
+    /* SCORECARD */
+
+    const scores = assessment.reportAnalysis?.scores || {};
+
+    Object.entries(scores).forEach(([key, value]) => {
+      doc.text(
+        `${key.replace(/([A-Z])/g, " $1")}: ${value}/10`,
+        margin,
+        yPos
+      );
+      yPos += 6;
+    });
+
+    yPos += 4;
+
+    doc.setFont("helvetica", "bold");
+
+    doc.text(
+      `Overall Score: ${assessment.reportAnalysis?.overallScore || 0} / 60`,
       margin,
-      yPos,
-      pageWidth - margin * 2
+      yPos
     );
-  }
 
-  /* ================= SAVE ================= */
+    yPos += 10;
 
-  const fileName =
-    `${assessment.email.replace(/[^a-z0-9]/gi,"_")}_full_report.pdf`;
+    /* SECTION EVALUATION */
 
-  doc.save(fileName);
+    const sections = assessment.reportAnalysis?.evaluationText || {};
 
-};
+    Object.entries(sections).forEach(([key, value]) => {
+
+      if (key === "overallSummary") return;
+
+      doc.setFont("helvetica", "bold");
+
+      doc.text(
+        key.replace(/([A-Z])/g, " $1"),
+        margin,
+        yPos
+      );
+
+      yPos += 6;
+
+      doc.setFont("helvetica", "normal");
+
+      yPos = addText(
+        value,
+        margin,
+        yPos,
+        pageWidth - margin * 2
+      );
+
+      yPos += 6;
+
+    });
+
+    if (sections.overallSummary) {
+
+      doc.setFont("helvetica", "bold");
+
+      doc.text("Overall Assessment Summary", margin, yPos);
+
+      yPos += 6;
+
+      doc.setFont("helvetica", "normal");
+
+      yPos = addText(
+        sections.overallSummary,
+        margin,
+        yPos,
+        pageWidth - margin * 2
+      );
+
+      yPos += 10;
+    }
+
+    /* ================= INTERVIEW ================= */
+
+    if (interview?.reportAnalysis) {
+
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = margin;
+      }
+
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+
+      doc.text("Interview Evaluation", margin, yPos);
+
+      yPos += 8;
+
+      doc.setFontSize(11);
+      doc.setFont("helvetica", "normal");
+
+      yPos = addText(
+        interview.reportAnalysis,
+        margin,
+        yPos,
+        pageWidth - margin * 2
+      );
+    }
+
+    /* ================= SAVE ================= */
+
+    const fileName =
+      `${assessment.email.replace(/[^a-z0-9]/gi, "_")}_full_report.pdf`;
+
+    doc.save(fileName);
+
+  };
   async function openInterviewReport(email, role) {
     try {
       const res = await fetch(
@@ -2838,17 +2839,17 @@ export default function AdminIndex() {
     }
   }
   async function toggleActive(id, current) {
-  try {
-    await fetch(`/api/admin/interviews/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isActive: !current }),
-    });
-    loadInterviews();
-  } catch (err) {
-    console.error("toggleActive error", err);
+    try {
+      await fetch(`/api/admin/interviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !current }),
+      });
+      loadInterviews();
+    } catch (err) {
+      console.error("toggleActive error", err);
+    }
   }
-}
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
       {/* Top Navbar */}
@@ -2859,13 +2860,13 @@ export default function AdminIndex() {
             <div className="flex items-center gap-2">
               <span className="text-xl font-bold text-gray-900 tracking-tight">Company Dashboard</span>
             </div>
-            
+
             {/* Search */}
             <div className="hidden md:flex items-center bg-gray-50 border border-gray-200 rounded-xl px-4 py-1.5 ml-8 group focus-within:ring-2 focus-within:ring-indigo-100 focus-within:border-indigo-300 transition-all">
               <span className="text-gray-400 mr-2 group-focus-within:text-indigo-500 transition-colors"><FiSearch size={16} /></span>
-              <input 
-                type="text" 
-                placeholder="Search Interviews..." 
+              <input
+                type="text"
+                placeholder="Search Interviews..."
                 className="bg-transparent border-none outline-none text-sm w-64 text-gray-700 placeholder-gray-400"
                 value={search}
                 onChange={(e) => { setSearch(e.target.value); setPage(1); }}
@@ -2897,47 +2898,53 @@ export default function AdminIndex() {
       <div className="bg-white border-b border-gray-200 overflow-x-auto no-scrollbar">
         <div className="max-w-7xl mx-auto px-6 whitespace-nowrap">
           <div className="flex items-center">
-            <button 
+            <button
               onClick={() => setActiveTab("dashboard")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'dashboard' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FiGrid className="text-lg" /> Dashboard
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("interviews")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'interviews' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FiMic className="text-lg" /> Interviews
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("reports")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'reports' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FiFileText className="text-lg" /> Reports
             </button>
-            <button 
+            <button
               onClick={() => setShowCreate(true)}
               className="py-4 px-6 text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-2 group"
             >
               <FiPlus className="text-lg group-hover:scale-110 transition-transform" /> Create
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("employee")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'employee' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FaRegUser className="text-lg" /> Employee
             </button>
-             <button 
+            <button
               onClick={() => setActiveTab("assessment")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'assessment' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <MdOutlineAssessment className="text-lg" /> Assessment
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab("hod-links")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'hod-links' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FiLink className="text-lg" /> HOD Links
+            </button>
+            <button
+              onClick={() => setActiveTab("psychometric")}
+              className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'psychometric' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
+            >
+              <FiLink className="text-lg" /> Pychometric Test
             </button>
           </div>
         </div>
@@ -2945,8 +2952,9 @@ export default function AdminIndex() {
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-6 py-8">
-        {activeTab==='employee'&&(<Employee/>)}
-        {activeTab==='assessment'&&<Assessment/>}
+        {activeTab === 'employee' && (<Employee />)}
+        {activeTab === 'assessment' && <Assessment />}
+        {activeTab === 'psychometric' && <Psychometric />}
         {activeTab === 'dashboard' && (
           <>
             {/* Page Header */}
@@ -2955,124 +2963,123 @@ export default function AdminIndex() {
               <p className="text-sm text-gray-500 mt-1 pb-4 border-b border-gray-200">Manage interviews, view reports and shortlist candidates</p>
             </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {[
-            { label: 'Total Interviews', value: interviews.length, change: '+0', icon: <FiBriefcase />, color: 'blue' },
-            { label: 'Shortlisted', value: reports.filter(r => r.shortlisted).length, change: '+0', icon: <FiAward />, color: 'orange' },
-          ].map((stat, i) => (
-            <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
-                <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${
-                  stat.color === 'blue' ? 'bg-blue-50 text-blue-600' :
-                  stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
-                  stat.color === 'purple' ? 'bg-purple-50 text-purple-600' :
-                  'bg-orange-50 text-orange-600'
-                }`}>
-                  {stat.icon}
-                </span>
-              </div>
-              <div className="flex items-end justify-between">
-                <div>
-                  <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
-                  {/* <div className="flex items-center gap-1 mt-2">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {[
+                { label: 'Total Interviews', value: interviews.length, change: '+0', icon: <FiBriefcase />, color: 'blue' },
+                { label: 'Shortlisted', value: reports.filter(r => r.shortlisted).length, change: '+0', icon: <FiAward />, color: 'orange' },
+              ].map((stat, i) => (
+                <div key={i} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-gray-500 text-sm font-medium">{stat.label}</span>
+                    <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg ${stat.color === 'blue' ? 'bg-blue-50 text-blue-600' :
+                        stat.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' :
+                          stat.color === 'purple' ? 'bg-purple-50 text-purple-600' :
+                            'bg-orange-50 text-orange-600'
+                      }`}>
+                      {stat.icon}
+                    </span>
+                  </div>
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <h3 className="text-3xl font-bold text-gray-900">{stat.value}</h3>
+                      {/* <div className="flex items-center gap-1 mt-2">
                     <span className="text-emerald-500 text-xs font-bold bg-emerald-50 px-2 py-0.5 rounded flex items-center gap-1">
                       ↗ {stat.change}
                     </span>
                     <span className="text-xs text-gray-400">vs last month</span>
                   </div> */}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent Evaluations Table Header */}
+            <div className="bg-white rounded-t-2xl shadow-sm border-t border-x border-gray-100 overflow-hidden mt-2">
+              <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h3 className="text-lg font-bold text-gray-900">Recent Evaluations</h3>
+                <div className="flex gap-2">
+                  <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">View All →</a>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Recent Evaluations Table Header */}
-        <div className="bg-white rounded-t-2xl shadow-sm border-t border-x border-gray-100 overflow-hidden mt-2">
-          <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 className="text-lg font-bold text-gray-900">Recent Evaluations</h3>
-            <div className="flex gap-2">
-              <a href="#" className="text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">View All →</a>
-            </div>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-white border-y border-gray-100 text-[11px] font-bold text-gray-800 uppercase tracking-wide">
-                  <th className="px-6 py-4">Email</th>
-                  <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Date</th>
-                  <th className="px-6 py-4 text-center">Score</th>
-                  <th className="px-6 py-4 text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {reports.slice(0, 5).length === 0 ? (
-                  <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No recent evaluations.</td></tr>
-                ) : (
-                  reports.slice(0, 5).map(r => (
-                    <tr key={r._id} className="hover:bg-gray-50/50 transition">
-                      <td className="px-6 py-4">
-                        <span className="text-sm font-semibold text-gray-600">{r.email}</span>
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold text-gray-500">{r.role}</td>
-                      <td className="px-6 py-4 text-xs font-semibold text-gray-500">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                      <td className="px-6 py-4 text-center">
-                        {r.reportAnalysis?.overallScore ? (
-                           <span className="text-sm font-bold text-gray-700">
-                             {Math.round((r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%
-                           </span>
-                        ) : (
-                          <div className="font-semibold text-gray-400 text-sm">Pending</div>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        {r.shortlisted ? (
-                          <span className="inline-flex justify-center items-center px-3 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100">
-                            Selected
-                          </span>
-                        ) : (
-                          <span className="inline-flex justify-center items-center px-3 py-1 border border-red-50 rounded-full text-[10px] font-bold bg-red-50 text-red-500">
-                            NA
-                          </span>
-                        )}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-white border-y border-gray-100 text-[11px] font-bold text-gray-800 uppercase tracking-wide">
+                      <th className="px-6 py-4">Email</th>
+                      <th className="px-6 py-4">Role</th>
+                      <th className="px-6 py-4">Date</th>
+                      <th className="px-6 py-4 text-center">Score</th>
+                      <th className="px-6 py-4 text-center">Status</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {reports.slice(0, 5).length === 0 ? (
+                      <tr><td colSpan="5" className="px-6 py-12 text-center text-gray-500">No recent evaluations.</td></tr>
+                    ) : (
+                      reports.slice(0, 5).map(r => (
+                        <tr key={r._id} className="hover:bg-gray-50/50 transition">
+                          <td className="px-6 py-4">
+                            <span className="text-sm font-semibold text-gray-600">{r.email}</span>
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold text-gray-500">{r.role}</td>
+                          <td className="px-6 py-4 text-xs font-semibold text-gray-500">{new Date(r.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+                          <td className="px-6 py-4 text-center">
+                            {r.reportAnalysis?.overallScore ? (
+                              <span className="text-sm font-bold text-gray-700">
+                                {Math.round((r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%
+                              </span>
+                            ) : (
+                              <div className="font-semibold text-gray-400 text-sm">Pending</div>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            {r.shortlisted ? (
+                              <span className="inline-flex justify-center items-center px-3 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-600 border border-green-100">
+                                Selected
+                              </span>
+                            ) : (
+                              <span className="inline-flex justify-center items-center px-3 py-1 border border-red-50 rounded-full text-[10px] font-bold bg-red-50 text-red-500">
+                                NA
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-8">
-          <button 
-            onClick={() => setShowCreate(true)}
-            className="flex items-center justify-between p-6 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition shadow-sm group"
-          >
-            <div className="text-left">
-              <h3 className="font-bold text-base mb-1">Create New Interview</h3>
-              <p className="text-xs text-blue-100 font-medium opacity-90">Set up a new interview role</p>
+            {/* Action Buttons */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 mb-8">
+              <button
+                onClick={() => setShowCreate(true)}
+                className="flex items-center justify-between p-6 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition shadow-sm group"
+              >
+                <div className="text-left">
+                  <h3 className="font-bold text-base mb-1">Create New Interview</h3>
+                  <p className="text-xs text-blue-100 font-medium opacity-90">Set up a new interview role</p>
+                </div>
+                <span className="text-2xl font-light opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">+</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('interviews')}
+                className="flex items-center justify-between p-6 bg-[#A80CF0] rounded-xl text-white hover:bg-[#9500d8] transition shadow-sm group"
+              >
+                <div className="text-left">
+                  <h3 className="font-bold text-base mb-1">Manage Interviews</h3>
+                  <p className="text-xs text-white/80 font-medium">View and edit active interviews</p>
+                </div>
+                <span className="text-xl opacity-80 group-hover:opacity-100 transition-all">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
+                </span>
+              </button>
             </div>
-            <span className="text-2xl font-light opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all">+</span>
-          </button>
-          
-          <button 
-            onClick={() => setActiveTab('interviews')}
-            className="flex items-center justify-between p-6 bg-[#A80CF0] rounded-xl text-white hover:bg-[#9500d8] transition shadow-sm group"
-          >
-            <div className="text-left">
-              <h3 className="font-bold text-base mb-1">Manage Interviews</h3>
-              <p className="text-xs text-white/80 font-medium">View and edit active interviews</p>
-            </div>
-            <span className="text-xl opacity-80 group-hover:opacity-100 transition-all">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"></path></svg>
-            </span>
-          </button>
-        </div>
-        </>
+          </>
         )}
 
         {/* Dynamic Content Based on Tab */}
@@ -3083,7 +3090,7 @@ export default function AdminIndex() {
                 <h1 className="text-2xl font-bold text-gray-900">Interviews</h1>
                 <p className="text-sm text-gray-500 mt-1">Manage and monitor your interview roles</p>
               </div>
-              <button 
+              <button
                 onClick={() => setShowCreate(true)}
                 className="py-2.5 px-5 bg-indigo-600 text-white rounded-lg font-bold text-sm hover:bg-indigo-700 transition shadow-sm flex items-center justify-center gap-2"
               >
@@ -3094,9 +3101,9 @@ export default function AdminIndex() {
             <div className="mb-6 flex flex-col md:flex-row gap-4">
               <div className="flex-1 relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"><FiSearch size={18} /></span>
-                <input 
-                  type="text" 
-                  placeholder="Search email or role..." 
+                <input
+                  type="text"
+                  placeholder="Search email or role..."
                   className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -3114,8 +3121,8 @@ export default function AdminIndex() {
               </select>
             </div>
 
-            {interviews.filter(iv => 
-              (roleFilter === 'all' || iv.jobRole === roleFilter) && 
+            {interviews.filter(iv =>
+              (roleFilter === 'all' || iv.jobRole === roleFilter) &&
               (!search || (iv.jobRole || '').toLowerCase().includes(search.toLowerCase()))
             ).length === 0 ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
@@ -3126,8 +3133,8 @@ export default function AdminIndex() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {interviews.filter(iv => 
-                  (roleFilter === 'all' || iv.jobRole === roleFilter) && 
+                {interviews.filter(iv =>
+                  (roleFilter === 'all' || iv.jobRole === roleFilter) &&
                   (!search || (iv.jobRole || '').toLowerCase().includes(search.toLowerCase()))
                 ).map(iv => (
                   <div key={iv._id} className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm hover:shadow-md transition-all flex flex-col group">
@@ -3144,24 +3151,22 @@ export default function AdminIndex() {
                         )}
                       </div>
                       <button
-  onClick={() => toggleActive(iv._id, iv.isActive)}
-  className={`relative w-10 h-5 rounded-full transition ${
-    iv.isActive ? "bg-green-500" : "bg-gray-300"
-  }`}
->
-  <span
-    className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${
-      iv.isActive ? "left-5" : "left-1"
-    }`}
-  />
-</button>
+                        onClick={() => toggleActive(iv._id, iv.isActive)}
+                        className={`relative w-10 h-5 rounded-full transition ${iv.isActive ? "bg-green-500" : "bg-gray-300"
+                          }`}
+                      >
+                        <span
+                          className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition ${iv.isActive ? "left-5" : "left-1"
+                            }`}
+                        />
+                      </button>
                     </div>
 
                     {/* Details Grid */}
                     <div className="grid grid-cols-2 gap-x-8 gap-y-5 mb-8 flex-1">
                       <div>
                         <p className="text-[9px] text-gray-400 font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5 italic">
-                           <span className="w-1 h-1 rounded-full bg-gray-300"></span> Qualification
+                          <span className="w-1 h-1 rounded-full bg-gray-300"></span> Qualification
                         </p>
                         <p className="text-xs font-bold text-gray-800 truncate" title={iv.qualification}>{iv.qualification}</p>
                       </div>
@@ -3264,8 +3269,8 @@ export default function AdminIndex() {
                                   {Math.round((r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%
                                 </span>
                                 <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden hidden sm:block">
-                                  <div 
-                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000 ease-out" 
+                                  <div
+                                    className="h-full bg-indigo-500 rounded-full transition-all duration-1000 ease-out"
                                     style={{ width: `${Math.min(100, (r.reportAnalysis.overallScore / (r.questions?.totalQuestions || 60)) * 100)}%` }}
                                   />
                                 </div>
@@ -3281,7 +3286,7 @@ export default function AdminIndex() {
                               </span>
                             ) : (
                               <span className="inline-flex justify-center items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-red-50 text-red-600 border border-red-100">
-                                 NA
+                                NA
                               </span>
                             )}
                           </td>
@@ -3337,7 +3342,7 @@ export default function AdminIndex() {
                         <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full uppercase tracking-wider ${review.isSubmitted
                           ? "bg-green-50 text-green-700 border border-green-100"
                           : "bg-red-50 text-red-700 border border-red-100"
-                        }`}>
+                          }`}>
                           {review.isSubmitted ? "Submitted" : "Not Submitted"}
                         </span>
                       </div>
@@ -3360,7 +3365,7 @@ export default function AdminIndex() {
                           className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 ${copiedToken === review.token
                             ? "bg-green-500 text-white"
                             : "bg-indigo-50 text-indigo-600 hover:bg-indigo-100"
-                          }`}
+                            }`}
                         >
                           <FiLink size={14} /> {copiedToken === review.token ? "Copied!" : "Copy Link"}
                         </button>
@@ -3385,124 +3390,124 @@ export default function AdminIndex() {
         )}
 
       </main>
-        <CompanyProfileModal
-          open={showCompanyProfile}
-          onClose={() => setShowCompanyProfile(false)}
+      <CompanyProfileModal
+        open={showCompanyProfile}
+        onClose={() => setShowCompanyProfile(false)}
+      />
+
+      {/* Create Modal */}
+      {showCreate && (
+        <CreateInterviewWizard
+          onClose={() => setShowCreate(false)}
+          onSuccess={loadInterviews}
         />
+      )}
 
-        {/* Create Modal */}
-        {showCreate && (
-          <CreateInterviewWizard 
-            onClose={() => setShowCreate(false)} 
-            onSuccess={loadInterviews} 
-          />
-        )}
+      {/* Report Modal */}
+      {showCombinedModal && combinedReport && (() => {
 
-        {/* Report Modal */}
-        {showCombinedModal && combinedReport && (() => {
+        const assessment = combinedReport.assessment;
+        const interview = combinedReport.interview;
 
-          const assessment = combinedReport.assessment;
-          const interview = combinedReport.interview;
+        const text = interview?.reportAnalysis || "";
 
-          const text = interview?.reportAnalysis || "";
+        const scoreRegex =
+          /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
 
-          const scoreRegex =
-            /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
+        const scores = [];
+        let match;
 
-          const scores = [];
-          let match;
+        while ((match = scoreRegex.exec(text)) !== null) {
+          scores.push({
+            label: match[1].replace(/\s+/g, " ").trim(),
+            value: Number(match[2])
+          });
+        }
 
-          while ((match = scoreRegex.exec(text)) !== null) {
-            scores.push({
-              label: match[1].replace(/\s+/g, " ").trim(),
-              value: Number(match[2])
-            });
-          }
+        const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
+        const overallMatch = text.match(overallRegex);
 
-          const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
-          const overallMatch = text.match(overallRegex);
+        const overallScore = overallMatch ? Number(overallMatch[1]) : 0;
+        const overallTotal = overallMatch ? Number(overallMatch[2]) : 50;
 
-          const overallScore = overallMatch ? Number(overallMatch[1]) : 0;
-          const overallTotal = overallMatch ? Number(overallMatch[2]) : 50;
+        const improvementRegex = /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
 
-          const improvementRegex = /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
+        const improvementMatch = text.match(improvementRegex);
 
-          const improvementMatch = text.match(improvementRegex);
+        const improvementText = improvementMatch ? improvementMatch[1].trim() : null;
 
-          const improvementText = improvementMatch ? improvementMatch[1].trim() : null;
+        const mainText = improvementMatch
+          ? text.replace(improvementRegex, "").trim()
+          : text;
 
-          const mainText = improvementMatch
-            ? text.replace(improvementRegex, "").trim()
-            : text;
+        // Assessment score out of 60
+        const assessmentScore = assessment?.reportAnalysis?.overallScore || 0;
 
-// Assessment score out of 60
-const assessmentScore = assessment?.reportAnalysis?.overallScore || 0;
+        // Interview score
+        const interviewScore = overallScore || 0;
 
-// Interview score
-const interviewScore = overallScore || 0;
+        // Normalize scores safely
+        const assessmentPercent = (assessmentScore / 60) * 100;
 
-// Normalize scores safely
-const assessmentPercent = (assessmentScore / 60) * 100;
+        let interviewPercent = 0;
 
-let interviewPercent = 0;
+        if (interview && overallTotal > 0) {
+          interviewPercent = (interviewScore / overallTotal) * 100;
+        }
 
-if (interview && overallTotal > 0) {
-  interviewPercent = (interviewScore / overallTotal) * 100;
-}
+        // Weighted score
+        let finalScore;
 
-// Weighted score
-let finalScore;
+        if (interview) {
+          // Assessment 60% + Interview 40%
+          finalScore = (assessmentPercent * 0.6) + (interviewPercent * 0.4);
+        } else {
+          // If interview not available use only assessment
+          finalScore = assessmentPercent;
+        }
 
-if (interview) {
-  // Assessment 60% + Interview 40%
-  finalScore = (assessmentPercent * 0.6) + (interviewPercent * 0.4);
-} else {
-  // If interview not available use only assessment
-  finalScore = assessmentPercent;
-}
+        let finalRecommendation = "Borderline";
 
-let finalRecommendation = "Borderline";
+        if (finalScore >= 70) {
+          finalRecommendation = "Proceed";
+        } else if (finalScore >= 50) {
+          finalRecommendation = "Borderline";
+        } else {
+          finalRecommendation = "Reject";
+        }
 
-if (finalScore >= 70) {
-  finalRecommendation = "Proceed";
-} else if (finalScore >= 50) {
-  finalRecommendation = "Borderline";
-} else {
-  finalRecommendation = "Reject";
-}
+        return (
 
-          return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
 
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
 
-              <div className="bg-white w-full max-w-6xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
+              <button
+                onClick={() => setShowCombinedModal(false)}
+                className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
+              >
+                ✕
+              </button>
 
-                <button
-                  onClick={() => setShowCombinedModal(false)}
-                  className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
-                >
-                  ✕
-                </button>
+              {/* HEADER */}
 
-                {/* HEADER */}
+              <div className="border-b pb-6 mb-6 flex justify-between items-center">
 
-                <div className="border-b pb-6 mb-6 flex justify-between items-center">
+                <div>
+                  <h2 className="text-2xl font-semibold text-gray-900">
+                    {assessment.email}
+                  </h2>
 
-                  <div>
-                    <h2 className="text-2xl font-semibold text-gray-900">
-                      {assessment.email}
-                    </h2>
+                  <p className="text-sm text-gray-600">
+                    Role: {assessment.role}
+                  </p>
 
-                    <p className="text-sm text-gray-600">
-                      Role: {assessment.role}
-                    </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Generated on {new Date(assessment.createdAt).toLocaleString()}
+                  </p>
+                </div>
 
-                    <p className="text-xs text-gray-400 mt-1">
-                      Generated on {new Date(assessment.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-
-                  {/* <span
+                {/* <span
                     className={`px-4 py-2 rounded-full text-sm font-semibold
 ${finalRecommendation === "Proceed"
                         ? "bg-green-100 text-green-700"
@@ -3514,48 +3519,48 @@ ${finalRecommendation === "Proceed"
                     {finalRecommendation}
                   </span> */}
 
+              </div>
+
+              {/* SCORE SUMMARY */}
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+
+                <div className="p-4 bg-indigo-50 rounded-lg border">
+                  <p className="text-sm text-gray-600">Assessment Score</p>
+                  <p className="text-2xl font-bold text-indigo-700">
+                    {assessmentScore}/60
+                  </p>
                 </div>
 
-                {/* SCORE SUMMARY */}
+                <div className="p-4 bg-green-50 rounded-lg border">
+                  <p className="text-sm text-gray-600">Interview Score</p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {interviewScore}/{overallTotal}
+                  </p>
+                </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div className="p-4 bg-gray-100 rounded-lg border">
+                  <p className="text-sm text-gray-600">Weighted Score</p>
+                  <p className="text-2xl font-bold">
+                    {finalScore.toFixed(1)}%
+                  </p>
+                </div>
 
-  <div className="p-4 bg-indigo-50 rounded-lg border">
-    <p className="text-sm text-gray-600">Assessment Score</p>
-    <p className="text-2xl font-bold text-indigo-700">
-      {assessmentScore}/60
-    </p>
-  </div>
+                <div className="p-4 bg-gray-50 rounded-lg border">
+                  <p className="text-sm text-gray-600">Final Decision</p>
+                  <p className="text-xl font-semibold">
+                    {finalRecommendation}
+                  </p>
+                </div>
 
-  <div className="p-4 bg-green-50 rounded-lg border">
-    <p className="text-sm text-gray-600">Interview Score</p>
-    <p className="text-2xl font-bold text-green-700">
-      {interviewScore}/{overallTotal}
-    </p>
-  </div>
+              </div>
+              {/* ================= ASSESSMENT ================= */}
 
-  <div className="p-4 bg-gray-100 rounded-lg border">
-    <p className="text-sm text-gray-600">Weighted Score</p>
-    <p className="text-2xl font-bold">
-      {finalScore.toFixed(1)}%
-    </p>
-  </div>
+              <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-indigo-500 pl-3 mb-4">
+                Assessment Evaluation
+              </h3>
 
-  <div className="p-4 bg-gray-50 rounded-lg border">
-    <p className="text-sm text-gray-600">Final Decision</p>
-    <p className="text-xl font-semibold">
-      {finalRecommendation}
-    </p>
-  </div>
-
-</div>
-                {/* ================= ASSESSMENT ================= */}
-
-                <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-indigo-500 pl-3 mb-4">
-                  Assessment Evaluation
-                </h3>
-
-                {/* <div className="p-5 border bg-gray-50 rounded-lg">
+              {/* <div className="p-5 border bg-gray-50 rounded-lg">
 
                   <p className="text-sm text-gray-700 leading-relaxed">
 
@@ -3567,274 +3572,274 @@ ${finalRecommendation === "Proceed"
 
                 </div> */}
 
-                {/* SCORECARDS */}
+              {/* SCORECARDS */}
 
-                <div className="mt-8">
+              <div className="mt-8">
 
-               
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
-                    {Object.entries(assessment.reportAnalysis?.scores || {}).map(
-                      ([key, value]) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 
-                        <div key={key} className="p-4 border rounded-lg shadow-sm">
+                  {Object.entries(assessment.reportAnalysis?.scores || {}).map(
+                    ([key, value]) => (
 
-                          <div className="text-sm text-gray-600 capitalize">
-                            {key.replace(/([A-Z])/g, " $1")}
+                      <div key={key} className="p-4 border rounded-lg shadow-sm">
+
+                        <div className="text-sm text-gray-600 capitalize">
+                          {key.replace(/([A-Z])/g, " $1")}
+                        </div>
+
+                        <div className="mt-2 text-2xl font-bold">
+                          {value}/10
+                        </div>
+
+                      </div>
+
+                    ))}
+
+                </div>
+
+                <p className="text-sm text-gray-500 mt-3">
+
+                  Overall Score:
+                  <strong> {assessmentScore} / 60</strong>
+
+                </p>
+
+              </div>
+
+              {/* SECTION EVALUATION */}
+
+              <div className="mt-8 space-y-4">
+
+                {Object.entries(
+                  assessment.reportAnalysis?.evaluationText || {}
+                ).map(([key, value]) =>
+
+                  key !== "overallSummary" && (
+
+                    <div
+                      key={key}
+                      className="p-4 border rounded-lg bg-white shadow-sm"
+                    >
+
+                      <div className="font-medium text-gray-900 capitalize">
+                        {key.replace(/([A-Z])/g, " $1")}
+                      </div>
+
+                      <p className="text-sm text-gray-700 mt-1">
+                        {value}
+                      </p>
+
+                    </div>
+
+                  )
+
+                )}
+
+              </div>
+
+              {/* SUMMARY */}
+
+              <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+
+                <h3 className="text-lg font-semibold text-blue-800">
+                  Overall Assessment Summary
+                </h3>
+
+                <p className="text-sm text-blue-900 mt-2 leading-relaxed">
+                  {assessment.reportAnalysis?.evaluationText?.overallSummary}
+                </p>
+
+              </div>
+
+              {/* ================= INTERVIEW ================= */}
+
+              {interview && (
+
+                <>
+
+                  <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mt-10 mb-4">
+                    Interview Evaluation
+                  </h3>
+
+                  {/* INTERVIEW SCORECARDS */}
+
+                  {scores.length > 0 && (
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+
+                      {scores.map((s, i) => (
+
+                        <div
+                          key={i}
+                          className="p-4 border rounded-lg shadow-sm"
+                        >
+
+                          <div className="text-sm text-gray-600">
+                            {s.label}
                           </div>
 
-                          <div className="mt-2 text-2xl font-bold">
-                            {value}/10
+                          <div className="text-2xl font-bold">
+                            {s.value}/10
                           </div>
 
                         </div>
 
                       ))}
 
-                  </div>
-
-                  <p className="text-sm text-gray-500 mt-3">
-
-                    Overall Score:
-                    <strong> {assessmentScore} / 60</strong>
-
-                  </p>
-
-                </div>
-
-                {/* SECTION EVALUATION */}
-
-                <div className="mt-8 space-y-4">
-
-                  {Object.entries(
-                    assessment.reportAnalysis?.evaluationText || {}
-                  ).map(([key, value]) =>
-
-                    key !== "overallSummary" && (
-
-                      <div
-                        key={key}
-                        className="p-4 border rounded-lg bg-white shadow-sm"
-                      >
-
-                        <div className="font-medium text-gray-900 capitalize">
-                          {key.replace(/([A-Z])/g, " $1")}
-                        </div>
-
-                        <p className="text-sm text-gray-700 mt-1">
-                          {value}
-                        </p>
-
-                      </div>
-
-                    )
+                    </div>
 
                   )}
 
-                </div>
+                  {overallScore > 0 && (
 
-                {/* SUMMARY */}
+                    <p className="text-sm text-gray-600 mt-3">
 
-                <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+                      <strong>Overall Score:</strong> {overallScore} / {overallTotal}
 
-                  <h3 className="text-lg font-semibold text-blue-800">
-                    Overall Assessment Summary
-                  </h3>
+                    </p>
 
-                  <p className="text-sm text-blue-900 mt-2 leading-relaxed">
-                    {assessment.reportAnalysis?.evaluationText?.overallSummary}
-                  </p>
+                  )}
 
-                </div>
+                  {/* INTERVIEW ANALYSIS */}
 
-                {/* ================= INTERVIEW ================= */}
+                  <div className="mt-8">
 
-                {interview && (
-
-                  <>
-
-                    <h3 className="text-xl font-semibold text-gray-800 border-l-4 border-green-500 pl-3 mt-10 mb-4">
-                      Interview Evaluation
+                    <h3 className="text-lg font-semibold mb-3">
+                      Detailed Evaluation
                     </h3>
 
-                    {/* INTERVIEW SCORECARDS */}
+                    <div className="text-sm text-gray-700 whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
+                      {mainText}
+                    </div>
 
-                    {scores.length > 0 && (
+                  </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                  {/* IMPROVEMENTS */}
 
-                        {scores.map((s, i) => (
+                  {improvementText && (
 
-                          <div
-                            key={i}
-                            className="p-4 border rounded-lg shadow-sm"
-                          >
+                    <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
 
-                            <div className="text-sm text-gray-600">
-                              {s.label}
-                            </div>
-
-                            <div className="text-2xl font-bold">
-                              {s.value}/10
-                            </div>
-
-                          </div>
-
-                        ))}
-
-                      </div>
-
-                    )}
-
-                    {overallScore > 0 && (
-
-                      <p className="text-sm text-gray-600 mt-3">
-
-                        <strong>Overall Score:</strong> {overallScore} / {overallTotal}
-
-                      </p>
-
-                    )}
-
-                    {/* INTERVIEW ANALYSIS */}
-
-                    <div className="mt-8">
-
-                      <h3 className="text-lg font-semibold mb-3">
-                        Detailed Evaluation
+                      <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                        Improvement Suggestions
                       </h3>
 
-                      <div className="text-sm text-gray-700 whitespace-pre-wrap border rounded-lg p-4 bg-gray-50">
-                        {mainText}
+                      <div className="text-sm text-blue-900 whitespace-pre-wrap">
+                        {improvementText}
                       </div>
 
                     </div>
 
-                    {/* IMPROVEMENTS */}
+                  )}
 
-                    {improvementText && (
+                </>
 
-                      <div className="mt-6 p-5 bg-blue-50 border border-blue-200 rounded-lg">
-
-                        <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                          Improvement Suggestions
-                        </h3>
-
-                        <div className="text-sm text-blue-900 whitespace-pre-wrap">
-                          {improvementText}
-                        </div>
-
-                      </div>
-
-                    )}
-
-                  </>
-
-                )}
+              )}
 
 
 
-                {/* ACTIONS */}
+              {/* ACTIONS */}
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-10 border-t pt-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mt-10 border-t pt-6">
 
-{/* LEFT SIDE ACTIONS */}
+                {/* LEFT SIDE ACTIONS */}
 
-  <div className="flex gap-3">
+                <div className="flex gap-3">
 
-<button
-  onClick={()=>downloadFullReportPDF(assessment, interview)}
-  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition"
->
-  Download Report
-</button>
-<button
-  onClick={async () => {
+                  <button
+                    onClick={() => downloadFullReportPDF(assessment, interview)}
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium transition"
+                  >
+                    Download Report
+                  </button>
+                  <button
+                    onClick={async () => {
 
-    const newStatus = !assessment.shortlisted;
+                      const newStatus = !assessment.shortlisted;
 
-    const res = await fetch(
-      `/api/admin/reports/${assessment._id}`,
-      {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ shortlisted: newStatus })
-      }
-    );
+                      const res = await fetch(
+                        `/api/admin/reports/${assessment._id}`,
+                        {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ shortlisted: newStatus })
+                        }
+                      );
 
-    const data = await res.json();
+                      const data = await res.json();
 
-    if (data.ok) {
-      setShowCombinedModal(false);
-      loadReports();
-    }
+                      if (data.ok) {
+                        setShowCombinedModal(false);
+                        loadReports();
+                      }
 
-  }}
-  className={`px-5 py-2 rounded-md text-white font-medium transition
+                    }}
+                    className={`px-5 py-2 rounded-md text-white font-medium transition
   ${assessment.shortlisted
-    ? "bg-red-600 hover:bg-red-700"
-    : "bg-green-600 hover:bg-green-700"}
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-green-600 hover:bg-green-700"}
   `}
->
-  {assessment.shortlisted
-    ? "Remove from Shortlist"
-    : "Shortlist"}
-</button>
+                  >
+                    {assessment.shortlisted
+                      ? "Remove from Shortlist"
+                      : "Shortlist"}
+                  </button>
 
 
 
 
-  </div>
-
-{/* RIGHT SIDE ACTION */}
-
-  <div>
-    <button
-  onClick={() => setShowCombinedModal(false)}
-  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium transition"
->
-  Close
-</button>
-
-
-  </div>
-
-</div>
-
-              </div>
-            </div>
-
-          );
-
-        })()}
-        {showReportModal && selectedReport && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
-
-              {/* Close */}
-              <button
-                onClick={closeReportModal}
-                className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
-              >
-                ✕
-              </button>
-
-              {/* ================= HEADER ================= */}
-              <div className="border-b pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    {selectedReport.email}
-                  </h2>
-                  <p className="text-sm text-gray-600">{selectedReport.role}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Report generated on{" "}
-                    {new Date(selectedReport.createdAt).toLocaleString()}
-                  </p>
                 </div>
 
-                {/* Recommendation Badge */}
-                {/* <div>
+                {/* RIGHT SIDE ACTION */}
+
+                <div>
+                  <button
+                    onClick={() => setShowCombinedModal(false)}
+                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-md text-sm font-medium transition"
+                  >
+                    Close
+                  </button>
+
+
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+        );
+
+      })()}
+      {showReportModal && selectedReport && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-5xl rounded-xl shadow-2xl p-6 overflow-auto max-h-[90vh] relative">
+
+            {/* Close */}
+            <button
+              onClick={closeReportModal}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 text-xl"
+            >
+              ✕
+            </button>
+
+            {/* ================= HEADER ================= */}
+            <div className="border-b pb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {selectedReport.email}
+                </h2>
+                <p className="text-sm text-gray-600">{selectedReport.role}</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Report generated on{" "}
+                  {new Date(selectedReport.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Recommendation Badge */}
+              {/* <div>
                   <span
                     className={`px-4 py-2 rounded-full text-sm font-semibold
               ${selectedReport.reportAnalysis?.recommendation === "Proceed"
@@ -3847,377 +3852,377 @@ ${finalRecommendation === "Proceed"
                     {selectedReport.reportAnalysis?.recommendation}
                   </span>
                 </div> */}
-              </div>
+            </div>
 
-              {/* ================= HIRING VERDICT ================= */}
-              <div className="mt-6 p-5 rounded-lg border bg-gray-50">
+            {/* ================= HIRING VERDICT ================= */}
+            <div className="mt-6 p-5 rounded-lg border bg-gray-50">
 
-                <p className="text-sm text-gray-700 leading-relaxed">
-                  <strong>Role Fit:</strong>{" "}
-                  {selectedReport.reportAnalysis?.roleFit?.match} —{" "}
-                  {selectedReport.reportAnalysis?.roleFit?.explanation}
-                </p>
-              </div>
+              <p className="text-sm text-gray-700 leading-relaxed">
+                <strong>Role Fit:</strong>{" "}
+                {selectedReport.reportAnalysis?.roleFit?.match} —{" "}
+                {selectedReport.reportAnalysis?.roleFit?.explanation}
+              </p>
+            </div>
 
-              {/* ================= SCORECARD ================= */}
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                  Candidate Scorecard
-                </h3>
+            {/* ================= SCORECARD ================= */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                Candidate Scorecard
+              </h3>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {Object.entries(selectedReport.reportAnalysis?.scores || {}).map(
-                    ([key, value]) => (
-                      <div
-                        key={key}
-                        className="p-4 rounded-lg border bg-white shadow-sm"
-                      >
-                        <div className="text-sm font-medium text-gray-600 capitalize">
-                          {key.replace(/([A-Z])/g, " $1")}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {Object.entries(selectedReport.reportAnalysis?.scores || {}).map(
+                  ([key, value]) => (
+                    <div
+                      key={key}
+                      className="p-4 rounded-lg border bg-white shadow-sm"
+                    >
+                      <div className="text-sm font-medium text-gray-600 capitalize">
+                        {key.replace(/([A-Z])/g, " $1")}
+                      </div>
+
+                      <div className="mt-2 flex items-center justify-between">
+                        <div className="text-2xl font-bold text-gray-900">
+                          {value}/10
                         </div>
-
-                        <div className="mt-2 flex items-center justify-between">
-                          <div className="text-2xl font-bold text-gray-900">
-                            {value}/10
-                          </div>
-                          <div className="w-24 h-2 bg-gray-200 rounded-full">
-                            <div
-                              className={`h-full rounded-full ${value >= 7
-                                ? "bg-green-500"
-                                : value >= 4
-                                  ? "bg-yellow-500"
-                                  : "bg-red-500"
-                                }`}
-                              style={{ width: `${(value / 10) * 100}%` }}
-                            />
-                          </div>
+                        <div className="w-24 h-2 bg-gray-200 rounded-full">
+                          <div
+                            className={`h-full rounded-full ${value >= 7
+                              ? "bg-green-500"
+                              : value >= 4
+                                ? "bg-yellow-500"
+                                : "bg-red-500"
+                              }`}
+                            style={{ width: `${(value / 10) * 100}%` }}
+                          />
                         </div>
                       </div>
-                    )
-                  )}
-                </div>
-
-                <p className="text-sm text-gray-500 mt-3">
-                  Overall Score:{" "}
-                  <strong>
-                    {selectedReport.reportAnalysis?.overallScore} / 60
-                  </strong>
-                </p>
+                    </div>
+                  )
+                )}
               </div>
 
-              {/* ================= DETAILED EVALUATION ================= */}
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Section-wise Evaluation
-                </h3>
+              <p className="text-sm text-gray-500 mt-3">
+                Overall Score:{" "}
+                <strong>
+                  {selectedReport.reportAnalysis?.overallScore} / 60
+                </strong>
+              </p>
+            </div>
 
-                <div className="space-y-4">
-                  {Object.entries(
-                    selectedReport.reportAnalysis?.evaluationText || {}
-                  ).map(
-                    ([key, value]) =>
-                      key !== "overallSummary" && (
-                        <div
-                          key={key}
-                          className="p-4 border rounded-lg bg-white shadow-sm"
-                        >
-                          <div className="font-medium text-gray-900 capitalize">
-                            {key.replace(/([A-Z])/g, " $1")}
-                          </div>
-                          <p className="text-sm text-gray-700 mt-1 leading-relaxed">
-                            {value}
-                          </p>
+            {/* ================= DETAILED EVALUATION ================= */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+                Section-wise Evaluation
+              </h3>
+
+              <div className="space-y-4">
+                {Object.entries(
+                  selectedReport.reportAnalysis?.evaluationText || {}
+                ).map(
+                  ([key, value]) =>
+                    key !== "overallSummary" && (
+                      <div
+                        key={key}
+                        className="p-4 border rounded-lg bg-white shadow-sm"
+                      >
+                        <div className="font-medium text-gray-900 capitalize">
+                          {key.replace(/([A-Z])/g, " $1")}
                         </div>
-                      )
-                  )}
-                </div>
-              </div>
-
-              {/* ================= OVERALL SUMMARY ================= */}
-              <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-800">
-                  Overall Assessment Summary
-                </h3>
-                <p className="text-sm text-blue-900 mt-2 leading-relaxed">
-                  {selectedReport.reportAnalysis?.evaluationText?.overallSummary}
-                </p>
-              </div>
-
-              {/* ================= IMPROVEMENT PLAN ================= */}
-              <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                  Recommended Improvement Areas
-                </h3>
-
-                <div className="p-4 border bg-gray-50 rounded-lg">
-                  <ul className="list-disc ml-5 text-sm text-gray-700 space-y-2">
-                    {Object.values(
-                      selectedReport.reportAnalysis?.improvementResources || {}
+                        <p className="text-sm text-gray-700 mt-1 leading-relaxed">
+                          {value}
+                        </p>
+                      </div>
                     )
-                      .flat()
-                      .map((item, idx) => (
-                        <li key={idx}>{item}</li>
-                      ))}
-                  </ul>
-                </div>
+                )}
               </div>
+            </div>
 
-              {/* ================= ACTIONS ================= */}
-              <div className="flex justify-between items-center mt-8">
+            {/* ================= OVERALL SUMMARY ================= */}
+            <div className="mt-8 p-5 bg-blue-50 border border-blue-200 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-800">
+                Overall Assessment Summary
+              </h3>
+              <p className="text-sm text-blue-900 mt-2 leading-relaxed">
+                {selectedReport.reportAnalysis?.evaluationText?.overallSummary}
+              </p>
+            </div>
 
-                <div className="flex gap-3">
+            {/* ================= IMPROVEMENT PLAN ================= */}
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                Recommended Improvement Areas
+              </h3>
 
-                  {/* Download PDF */}
-                  <button
-                    onClick={() => downloadReportPDF(selectedReport)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
-                  >
-                    Download PDF
-                  </button>
+              <div className="p-4 border bg-gray-50 rounded-lg">
+                <ul className="list-disc ml-5 text-sm text-gray-700 space-y-2">
+                  {Object.values(
+                    selectedReport.reportAnalysis?.improvementResources || {}
+                  )
+                    .flat()
+                    .map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                </ul>
+              </div>
+            </div>
 
-                  {/* Shortlist Toggle */}
-                  <button
-                    onClick={async () => {
-                      const newStatus = !selectedReport.shortlisted;
+            {/* ================= ACTIONS ================= */}
+            <div className="flex justify-between items-center mt-8">
 
-                      const res = await fetch(
-                        `/api/admin/reports/${selectedReport._id}`,
-                        {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ shortlisted: newStatus }),
-                        }
-                      );
+              <div className="flex gap-3">
 
-                      const data = await res.json();
-                      if (data.ok) {
-                        setShowReportModal(false);
-                        loadReports();
-                      }
-                    }}
-                    className={`px-4 py-2 rounded-md text-white font-medium
-      ${selectedReport.shortlisted ? "bg-red-600" : "bg-green-600"}`}
-                  >
-                    {selectedReport.shortlisted
-                      ? "Remove from Shortlist"
-                      : "Shortlist Candidate"}
-                  </button>
-
-                </div>
+                {/* Download PDF */}
                 <button
-                  onClick={closeReportModal}
-                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+                  onClick={() => downloadReportPDF(selectedReport)}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
                 >
-                  Close
+                  Download PDF
                 </button>
+
+                {/* Shortlist Toggle */}
+                <button
+                  onClick={async () => {
+                    const newStatus = !selectedReport.shortlisted;
+
+                    const res = await fetch(
+                      `/api/admin/reports/${selectedReport._id}`,
+                      {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ shortlisted: newStatus }),
+                      }
+                    );
+
+                    const data = await res.json();
+                    if (data.ok) {
+                      setShowReportModal(false);
+                      loadReports();
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-md text-white font-medium
+      ${selectedReport.shortlisted ? "bg-red-600" : "bg-green-600"}`}
+                >
+                  {selectedReport.shortlisted
+                    ? "Remove from Shortlist"
+                    : "Shortlist Candidate"}
+                </button>
+
               </div>
+              <button
+                onClick={closeReportModal}
+                className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
+              >
+                Close
+              </button>
             </div>
           </div>
-        )}
-        {showInterviewReportModal && selectedInterviewReport && (() => {
+        </div>
+      )}
+      {showInterviewReportModal && selectedInterviewReport && (() => {
 
-          const text = selectedInterviewReport.reportAnalysis || "";
-
-
-          const scoreRegex =
-            /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
-
-          const scores = [];
-          let match;
-
-          while ((match = scoreRegex.exec(text)) !== null) {
-            scores.push({
-              label: match[1].replace(/\s+/g, " ").trim(),
-              value: Number(match[2])
-            });
-          }
+        const text = selectedInterviewReport.reportAnalysis || "";
 
 
-          const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
-          const overallMatch = text.match(overallRegex);
+        const scoreRegex =
+          /(Technical\s*Proficiency|Communication|Decision[-\s]*Making|Confidence|Language\s*Fluency)\s*:\s*(\d+)\s*\/\s*10/gi;
 
-          const overallScore = overallMatch ? Number(overallMatch[1]) : null;
-          const overallTotal = overallMatch ? Number(overallMatch[2]) : null;
+        const scores = [];
+        let match;
 
-          const improvementRegex =
-            /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
-
-          const improvementMatch = text.match(improvementRegex);
-
-          const improvementText = improvementMatch
-            ? improvementMatch[1].trim()
-            : null;
-
-          const mainText = improvementMatch
-            ? text.replace(improvementRegex, "").trim()
-            : text;
-
-          return (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
-
-                {/* Close */}
-                <button
-                  onClick={() => setShowInterviewReportModal(false)}
-                  className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
-                >
-                  ✕
-                </button>
-
-                {/* Header */}
-                <div className="border-b pb-4 mb-6">
-                  <h2 className="text-2xl font-semibold text-gray-900">
-                    Interview Evaluation Report
-                  </h2>
-                  <p className="text-sm text-gray-600 mt-2">
-                    <strong>Email:</strong> {selectedInterviewReport.email}
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    <strong>Role:</strong> {selectedInterviewReport.role}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Generated on {new Date(selectedInterviewReport.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                {/* SCORE CARDS */}
-                {scores.length > 0 && (
-                  <div className="mb-8">
-                    <h3 className="text-lg font-semibold mb-4 text-gray-800">
-                      Scorecard
-                    </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                      {scores.map((s, i) => (
-                        <div
-                          key={i}
-                          className="p-4 rounded-xl border bg-white shadow-sm"
-                        >
-                          <div className="text-sm font-medium text-gray-600">
-                            {s.label}
-                          </div>
-
-                          <div className="mt-3 flex items-center justify-between">
-                            <div className="text-2xl font-bold text-gray-900">
-                              {s.value}/10
-                            </div>
-
-                            <div className="w-24 h-2 bg-gray-200 rounded-full">
-                              <div
-                                className={`h-full rounded-full ${s.value >= 7
-                                  ? "bg-green-500"
-                                  : s.value >= 4
-                                    ? "bg-yellow-500"
-                                    : "bg-red-500"
-                                  }`}
-                                style={{ width: `${(s.value / 10) * 100}%` }}
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {overallScore && (
-                      <p className="text-sm text-gray-600 mt-4">
-                        <strong>Overall Score:</strong> {overallScore} / {overallTotal}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* MAIN ANALYSIS TEXT */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                    Detailed Evaluation
-                  </h3>
-
-                  <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed border rounded-lg p-4 bg-gray-50">
-                    {mainText}
-                  </div>
-                </div>
-
-                {/* IMPROVEMENTS */}
-                {improvementText && (
-                  <div className="p-5 bg-blue-50 border border-blue-200 rounded-xl">
-                    <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                      Improvement Suggestions
-                    </h3>
-
-                    <div className="text-sm text-blue-900 whitespace-pre-wrap leading-relaxed">
-                      {improvementText}
-                    </div>
-                  </div>
-                )}
-                <div className="flex justify-end mt-8 gap-3">
-
-                  <button
-                    onClick={() => downloadInterviewPDF(selectedInterviewReport)}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
-                  >
-                    Download PDF
-                  </button>
-
-                  <button
-                    onClick={() => setShowInterviewReportModal(false)}
-                    className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
-                  >
-                    Close
-                  </button>
-
-                </div>
-
-              </div>
-
-            </div>
-          );
-
-        })()}
+        while ((match = scoreRegex.exec(text)) !== null) {
+          scores.push({
+            label: match[1].replace(/\s+/g, " ").trim(),
+            value: Number(match[2])
+          });
+        }
 
 
-        {/* ⭐ HOD FEEDBACK MODAL */}
-        {showHodModal && selectedHodReview && (
-          <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+        const overallRegex = /Overall(?:\s*Score)?\s*:\s*(\d+)\s*\/\s*(\d+)/i;
+        const overallMatch = text.match(overallRegex);
+
+        const overallScore = overallMatch ? Number(overallMatch[1]) : null;
+        const overallTotal = overallMatch ? Number(overallMatch[2]) : null;
+
+        const improvementRegex =
+          /Improvement\s*Suggestions\s*:\s*([\s\S]*)/i;
+
+        const improvementMatch = text.match(improvementRegex);
+
+        const improvementText = improvementMatch
+          ? improvementMatch[1].trim()
+          : null;
+
+        const mainText = improvementMatch
+          ? text.replace(improvementRegex, "").trim()
+          : text;
+
+        return (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-5xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+
+              {/* Close */}
               <button
-                onClick={() => setShowHodModal(false)}
+                onClick={() => setShowInterviewReportModal(false)}
                 className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
               >
                 ✕
               </button>
 
+              {/* Header */}
               <div className="border-b pb-4 mb-6">
-                <h2 className="text-2xl font-bold text-gray-900">HOD Culture Review Feedback</h2>
-                <div className="mt-2 flex flex-wrap gap-4 text-sm">
-                  <p className="text-gray-600"><strong>HOD Name:</strong> {selectedHodReview.hodName || "N/A"}</p>
-                  <p className="text-gray-600"><strong>Department:</strong> {selectedHodReview.departmentName || "N/A"}</p>
-                  <p className="text-gray-600"><strong>Submitted:</strong> {new Date(selectedHodReview.submittedAt).toLocaleString()}</p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  Interview Evaluation Report
+                </h2>
+                <p className="text-sm text-gray-600 mt-2">
+                  <strong>Email:</strong> {selectedInterviewReport.email}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Role:</strong> {selectedInterviewReport.role}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Generated on {new Date(selectedInterviewReport.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              {/* SCORE CARDS */}
+              {scores.length > 0 && (
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold mb-4 text-gray-800">
+                    Scorecard
+                  </h3>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    {scores.map((s, i) => (
+                      <div
+                        key={i}
+                        className="p-4 rounded-xl border bg-white shadow-sm"
+                      >
+                        <div className="text-sm font-medium text-gray-600">
+                          {s.label}
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between">
+                          <div className="text-2xl font-bold text-gray-900">
+                            {s.value}/10
+                          </div>
+
+                          <div className="w-24 h-2 bg-gray-200 rounded-full">
+                            <div
+                              className={`h-full rounded-full ${s.value >= 7
+                                ? "bg-green-500"
+                                : s.value >= 4
+                                  ? "bg-yellow-500"
+                                  : "bg-red-500"
+                                }`}
+                              style={{ width: `${(s.value / 10) * 100}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {overallScore && (
+                    <p className="text-sm text-gray-600 mt-4">
+                      <strong>Overall Score:</strong> {overallScore} / {overallTotal}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* MAIN ANALYSIS TEXT */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">
+                  Detailed Evaluation
+                </h3>
+
+                <div className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed border rounded-lg p-4 bg-gray-50">
+                  {mainText}
                 </div>
               </div>
 
-              <div className="space-y-6">
-                {selectedHodReview.responses && selectedHodReview.responses.map((item, idx) => (
-                  <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-100">
-                    <p className="text-sm font-bold text-indigo-600 mb-1">Question {idx + 1}</p>
-                    <p className="text-gray-900 font-semibold mb-3">{item.question}</p>
-                    <div className="bg-white p-4 rounded-lg border border-gray-200 text-gray-700 leading-relaxed min-h-[60px]">
-                      {item.answer || <span className="text-gray-400 italic">No answer provided</span>}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {/* IMPROVEMENTS */}
+              {improvementText && (
+                <div className="p-5 bg-blue-50 border border-blue-200 rounded-xl">
+                  <h3 className="text-lg font-semibold text-blue-800 mb-3">
+                    Improvement Suggestions
+                  </h3>
 
-              <div className="flex justify-end mt-8">
+                  <div className="text-sm text-blue-900 whitespace-pre-wrap leading-relaxed">
+                    {improvementText}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end mt-8 gap-3">
+
                 <button
-                  onClick={() => setShowHodModal(false)}
-                  className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition"
+                  onClick={() => downloadInterviewPDF(selectedInterviewReport)}
+                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm font-medium"
+                >
+                  Download PDF
+                </button>
+
+                <button
+                  onClick={() => setShowInterviewReportModal(false)}
+                  className="px-5 py-2 bg-gray-200 hover:bg-gray-300 rounded-md text-sm"
                 >
                   Close
                 </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        );
+
+      })()}
+
+
+      {/* ⭐ HOD FEEDBACK MODAL */}
+      {showHodModal && selectedHodReview && (
+        <div className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-4xl rounded-2xl shadow-2xl p-8 overflow-auto max-h-[90vh] relative">
+            <button
+              onClick={() => setShowHodModal(false)}
+              className="absolute right-5 top-5 text-gray-400 hover:text-gray-700 text-xl"
+            >
+              ✕
+            </button>
+
+            <div className="border-b pb-4 mb-6">
+              <h2 className="text-2xl font-bold text-gray-900">HOD Culture Review Feedback</h2>
+              <div className="mt-2 flex flex-wrap gap-4 text-sm">
+                <p className="text-gray-600"><strong>HOD Name:</strong> {selectedHodReview.hodName || "N/A"}</p>
+                <p className="text-gray-600"><strong>Department:</strong> {selectedHodReview.departmentName || "N/A"}</p>
+                <p className="text-gray-600"><strong>Submitted:</strong> {new Date(selectedHodReview.submittedAt).toLocaleString()}</p>
               </div>
             </div>
+
+            <div className="space-y-6">
+              {selectedHodReview.responses && selectedHodReview.responses.map((item, idx) => (
+                <div key={idx} className="bg-gray-50 p-6 rounded-xl border border-gray-100">
+                  <p className="text-sm font-bold text-indigo-600 mb-1">Question {idx + 1}</p>
+                  <p className="text-gray-900 font-semibold mb-3">{item.question}</p>
+                  <div className="bg-white p-4 rounded-lg border border-gray-200 text-gray-700 leading-relaxed min-h-[60px]">
+                    {item.answer || <span className="text-gray-400 italic">No answer provided</span>}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end mt-8">
+              <button
+                onClick={() => setShowHodModal(false)}
+                className="px-6 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-semibold transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
-        )}
+        </div>
+      )}
 
     </div>
   );
