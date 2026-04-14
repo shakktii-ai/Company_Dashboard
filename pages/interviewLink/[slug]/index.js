@@ -1,17 +1,28 @@
 // pages/interviewLink/[slug].js
 
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function EmployeeAssessmentStart() {
   const router = useRouter();
-  const { slug } = router.query;
+  const { slug, assignmentId } = router.query;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const hasStarted = useRef(false); // ✅ prevent duplicate calls
+
   useEffect(() => {
-    if (!slug) return;
+    if (!router.isReady) return;
+
+    if (!slug || !assignmentId) {
+      setError("Invalid test link");
+      setLoading(false);
+      return;
+    }
+
+    if (hasStarted.current) return;
+    hasStarted.current = true;
 
     async function startAssessment() {
       try {
@@ -19,30 +30,29 @@ export default function EmployeeAssessmentStart() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify({ slug }),
+          body: JSON.stringify({ slug, assignmentId }),
         });
 
         const data = await res.json();
 
-        if (!data.ok) {
-          setError(data.message || "Assessment not available");
-          setLoading(false);
-          return;
+        if (!res.ok || !data.ok) {
+          throw new Error(data.message || "Assessment not available");
         }
 
-        // Redirect to instructions page
         router.replace(
           `/interviewLink/${slug}/test?sessionId=${data.sessionId}`
         );
+
       } catch (err) {
-        setError("Something went wrong");
+        console.error(err);
+        setError(err.message || "Something went wrong");
         setLoading(false);
       }
     }
 
     startAssessment();
-  }, [slug]);
 
+  }, [router.isReady, slug, assignmentId]);
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 px-6">
       <div className="bg-white shadow-lg rounded-xl p-8 max-w-md w-full text-center">

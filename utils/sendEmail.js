@@ -8,13 +8,13 @@ const sendEmail = async (recipientEmail, subject, htmlContent) => {
     port: 587,
     secure: false, // TLS/SSL will be used instead
     auth: {
-      user: "8ad4ee001@smtp-brevo.com", // Your SMTP login
-      pass: "69DnZvSONQasMPUg",         // Your SMTP password (Master Password)
+       user: process.env.BREVO_USER, // Use environment variable for SMTP login
+      pass: process.env.BREVO_PASS, // Use environment variable for SMTP password
     },
   });
 
   const mailOptions = {
-    from: "omkarmane2082000@gmail.com", // Your verified email
+    from: "shakktii.ai@gmail.com", // Your verified email
     to: recipientEmail,
     subject: subject,
     html: htmlContent, // HTML content of the email

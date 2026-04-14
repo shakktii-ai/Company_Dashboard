@@ -2940,12 +2940,12 @@ export default function AdminIndex() {
             >
               <FiLink className="text-lg" /> HOD Links
             </button>
-            <button
+            {/* <button
               onClick={() => setActiveTab("psychometric")}
               className={`py-4 px-6 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${activeTab === 'psychometric' ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50 rounded-t-xl' : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50/30'}`}
             >
               <FiLink className="text-lg" /> Pychometric Test
-            </button>
+            </button> */}
           </div>
         </div>
       </div>

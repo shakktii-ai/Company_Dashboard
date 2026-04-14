@@ -160,10 +160,15 @@ export default function EmployeeAssessments() {
                           }
                           router.push({
                             pathname: `/psychometricTest/${a.slug}/psychometricTest`,
-                            query: { linkId: item.linkId._id ,assignmentId: item._id}
+                            query: { linkId: item.linkId._id, assignmentId: item._id }
                           });
                         } else {
-                          router.push(`/interviewLink/${a.slug}`);
+                          router.push({
+                            pathname: `/interviewLink/${a.slug}`,
+                            query: {
+                              assignmentId: item._id // KEY FIX
+                            }
+                          });
                         }
                       }}
                       className="flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition"

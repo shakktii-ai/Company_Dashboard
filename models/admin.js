@@ -7,6 +7,8 @@ const AdminSchema = new mongoose.Schema({
   companyId: { type: mongoose.Schema.Types.ObjectId, ref: "Company", required: true },
   role: { type: String, default: "admin" }, // Any role allowed - no restrictions
   cultureInterviewCompleted: { type: Boolean, default: false }, // Track if employee completed culture interview
+  resetToken: { type: String, default: null },
+  resetTokenExpiry: { type: Date, default: null },
   createdAt: { type: Date, default: Date.now },
 });
 

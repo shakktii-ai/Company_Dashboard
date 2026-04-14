@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { IoIosArrowBack } from "react-icons/io";
+import { toast } from "react-toastify";
 
 export default function EmployeeAssessmentsAdmin() {
 
@@ -31,17 +32,17 @@ export default function EmployeeAssessmentsAdmin() {
         loadEmployees();
     }, []);
 
-useEffect(()=>{
-  loadAssessments();
-  loadEmployees();
+    useEffect(() => {
+        loadAssessments();
+        loadEmployees();
 
-  const interval = setInterval(() => {
-    loadAssessments();
-  }, 5000); // every 5 sec
+        const interval = setInterval(() => {
+            loadAssessments();
+        }, 5000); // every 5 sec
 
-  return () => clearInterval(interval);
+        return () => clearInterval(interval);
 
-},[]);
+    }, []);
     /* ================= LOAD ================= */
 
     async function loadAssessments() {
@@ -66,49 +67,107 @@ useEffect(()=>{
     /* ================= CREATE ================= */
 
     async function handleCreate(e) {
+  e.preventDefault();
 
-        e.preventDefault();
+  // ✅ Trim values
+  const title = form.title.trim();
+  const role = form.role.trim();
+  const jd = form.jd.trim();
+  const kpiArr = form.kpi.split(",").map(i => i.trim()).filter(Boolean);
+  const kraArr = form.kra.split(",").map(i => i.trim()).filter(Boolean);
 
-        const payload = {
-            ...form,
-            kpi: form.kpi.split(",").map(i => i.trim()),
-            kra: form.kra.split(",").map(i => i.trim())
-        };
+  // ❌ VALIDATION
+  if (!title) {
+    return toast.error("Title is required");
+  }
 
-        const url = editId
-            ? `/api/admin/employee-assessments/${editId}`
-            : "/api/admin/employee-assessments";
+  if (title.length < 3) {
+    return toast.error("Title must be at least 3 characters");
+  }
 
-        const method = editId ? "PUT" : "POST";
+  if (!role) {
+    return toast.error("Role is required");
+  }
 
-        const res = await fetch(url, {
-            method,
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify(payload)
-        });
+  if (!jd || jd.length < 20) {
+    return toast.error("Job description must be at least 20 characters");
+  }
 
-        const data = await res.json();
+  if (kpiArr.length === 0) {
+    return toast.error("Add at least one KPI");
+  }
 
-        if (data.ok) {
+  if (kraArr.length === 0) {
+    return toast.error("Add at least one KRA");
+  }
 
-            setShowCreate(false);
-            setEditId(null);
+  if (kpiArr.length > 20) {
+    return toast.error("Too many KPI (max 20)");
+  }
 
-            setForm({
-                title: "",
-                role: "",
-                jd: "",
-                kpi: "",
-                kra: ""
-            });
+  if (kraArr.length > 20) {
+    return toast.error("Too many KRA (max 20)");
+  }
 
-            loadAssessments();
+  const payload = {
+    title,
+    role,
+    jd,
+    kpi: kpiArr,
+    kra: kraArr
+  };
 
-        }
+  const url = editId
+    ? `/api/admin/employee-assessments/${editId}`
+    : "/api/admin/employee-assessments";
 
+  const method = editId ? "PUT" : "POST";
+
+  const toastId = toast.loading(editId ? "Updating..." : "Creating...");
+
+  try {
+    const res = await fetch(url, {
+      method,
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      throw new Error(data.error || "Failed");
     }
 
+    toast.update(toastId, {
+      render: editId ? "Updated successfully" : "Created successfully",
+      type: "success",
+      isLoading: false,
+      autoClose: 3000
+    });
+
+    setShowCreate(false);
+    setEditId(null);
+
+    setForm({
+      title: "",
+      role: "",
+      jd: "",
+      kpi: "",
+      kra: ""
+    });
+
+    loadAssessments();
+
+  } catch (err) {
+    toast.update(toastId, {
+      render: err.message,
+      type: "error",
+      isLoading: false,
+      autoClose: 4000
+    });
+  }
+}
 
     /* ================= ASSIGN ================= */
 
@@ -136,7 +195,15 @@ useEffect(()=>{
 
         if (data.ok) {
 
-            alert("Assigned successfully");
+            toast.success("Assigned successfully", {
+                icon: "✅",
+                style: {
+                    borderRadius: "12px",
+                    background: "#f0fdf4",
+                    color: "#166534",
+                    border: "1px solid #bbf7d0"
+                }
+            });
             setShowAssign(false);
             loadAssessments();
         }

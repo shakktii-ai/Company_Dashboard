@@ -66,18 +66,18 @@ export default function EmployeeAssessmentTest() {
   }, [sessionId]);
 
   useEffect(() => {
-  if (!sessionId) return;
-  if (Object.keys(writtenAnswers).length === 0) return;
+    if (!sessionId) return;
+    if (Object.keys(writtenAnswers).length === 0) return;
 
-  const interval = setInterval(() => {
-    localStorage.setItem(
-      `assessment_${sessionId}`,
-      JSON.stringify(writtenAnswers)
-    );
-  }, 5000);
+    const interval = setInterval(() => {
+      localStorage.setItem(
+        `assessment_${sessionId}`,
+        JSON.stringify(writtenAnswers)
+      );
+    }, 5000);
 
-  return () => clearInterval(interval);
-}, [writtenAnswers, sessionId]);
+    return () => clearInterval(interval);
+  }, [writtenAnswers, sessionId]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -90,7 +90,7 @@ export default function EmployeeAssessmentTest() {
   /* ================= TIMER (SERVER BASED) ================= */
 
   useEffect(() => {
-   if (!session?.startedAt || submitted) return;
+    if (!session?.startedAt || submitted) return;
 
     const start = new Date(session.startedAt).getTime();
     if (isNaN(start)) return;
@@ -115,7 +115,7 @@ export default function EmployeeAssessmentTest() {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [session,submitted]);
+  }, [session, submitted]);
 
   /* ================= SUBMIT ================= */
 
@@ -125,7 +125,7 @@ export default function EmployeeAssessmentTest() {
     try {
       setLoading(true);
       setSubmitted(true);
-      await fetch("/api/admin/employees/submit", {
+      const res = await fetch("/api/admin/employees/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,6 +137,11 @@ export default function EmployeeAssessmentTest() {
           })),
         }),
       });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data.message || "Submit failed");
+      }
       localStorage.removeItem(`assessment_${sessionId}`);
       router.push("/admin/employeeDashboard");
     } catch (error) {

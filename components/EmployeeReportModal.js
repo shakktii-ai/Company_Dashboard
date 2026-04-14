@@ -3,22 +3,31 @@ import { FiX } from "react-icons/fi";
 
 export default function EmployeeReportModal({ sessionId, onClose,employeeId }) {
   const [report, setReport] = useState(null);
-
+  const [loading,setLoading]=useState(false);
   useEffect(() => {
     if (!sessionId) return;
     loadReport();
   }, [sessionId]);
 
   async function loadReport() {
-    // const res = await fetch(`/api/admin/employees/report/${sessionId}`);
+    setLoading(true);
        const url = employeeId
       ? `/api/admin/employees/report/${sessionId}?employeeId=${employeeId}`
       : `/api/admin/employees/report/${sessionId}`;
     const res = await fetch(url);
     const data = await res.json();
     if (data.ok) setReport(data.session);
+    setLoading(false);
   }
-
+if (loading) {
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-xl shadow text-sm text-gray-500">
+        Loading report...
+      </div>
+    </div>
+  );
+}
   if (!report)
     return (
       <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">

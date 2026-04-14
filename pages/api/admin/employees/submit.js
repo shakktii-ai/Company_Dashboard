@@ -308,14 +308,28 @@ const answerMap = new Map(
 
     await session.save();
 
-    await Assign.findOneAndUpdate(
-        {
-            employeeId: user.adminId,
-            assessmentId: session.assessmentId,
-        },
-        { status: "completed" }
-    );
+    // await Assign.findOneAndUpdate(
+    //     {
+    //         employeeId: user.adminId,
+    //         assessmentId: session.assessmentId,
+    //     },
+    //     { status: "completed" }
+    // );
+if (!session.assignmentId) {
+  console.error("❌ Missing assignmentId in session:", session._id);
+} else {
+  const updated = await Assign.findByIdAndUpdate(
+    session.assignmentId,
+    { status: "completed" },
+    { new: true }
+  );
 
+  if (!updated) {
+    console.error("❌ Assignment not found:", session.assignmentId);
+  } else {
+    console.log("✅ Assignment updated:", updated._id);
+  }
+}
     res.json({
         ok: true,
         finalScore,
@@ -323,11 +337,7 @@ const answerMap = new Map(
     });
 
 }
-
-/* ===================================================== */
 /* ================= AI REPORT ENGINE ================== */
-/* ===================================================== */
-
 async function generateAIReport({
     assessment,
     mcqScore,

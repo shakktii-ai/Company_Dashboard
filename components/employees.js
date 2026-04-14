@@ -106,10 +106,27 @@ export default function EmployeesPage() {
           password: "",
           role: "",
         });
-
+    toast.success("Employee created successfully", {
+  icon: "✅",
+  style: {
+    borderRadius: "12px",
+    background: "#f0fdf4",
+    color: "#166534",
+    border: "1px solid #bbf7d0"
+  }
+});
         loadEmployees();
       } else {
-        toast.error(data.error || "Error creating employee");
+        toast.error(data.error || "Error creating employee", {
+  icon: "❌",
+  style: {
+    borderRadius: "12px",
+    background: "#fef2f2",
+    color: "#991b1b",
+    border: "1px solid #fecaca"
+  }
+}
+);
       }
     } catch (err) {
       console.error(err);
@@ -161,7 +178,15 @@ export default function EmployeesPage() {
     const data = await res.json();
 
     if (data.ok) {
-      toast.success("Psychometric assigned successfully");
+      toast.success("Psychometric assigned successfully",{
+  icon: "✅",
+  style: {
+    borderRadius: "12px",
+    background: "#f0fdf4",
+    color: "#166534",
+    border: "1px solid #bbf7d0"
+  }
+});
       setShowAssign(false);
     }
   }
@@ -631,10 +656,7 @@ export default function EmployeesPage() {
                           onClick={() => {
                             if (ass.type === "psychometric") {
                               if (ass.status === "completed") {
-                                if (!ass.resultId) {
-                                  alert("Result not found");
-                                  return;
-                                }
+                              
                                 setSelectedPsychometric(ass.resultId);
                               }
                             } else {
@@ -658,9 +680,11 @@ export default function EmployeesPage() {
                                 : ass?.title || "Assessment"}
                             </p>
 
-                            {/* <p className="text-xs text-gray-400 mt-1">
-                    {new Date(ass.createdAt).toLocaleDateString()}
-                  </p> */}
+                             <p className="text-xs text-gray-400 mt-1">
+  {ass.createdAt || ass.startedAt
+    ? new Date(ass.createdAt || ass.startedAt).toLocaleDateString()
+    : "—"}
+</p>
                           </div>
 
                           {/* Status */}

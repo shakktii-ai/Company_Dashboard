@@ -126,9 +126,8 @@ if (data.admin.role !== "admin") {
               Remember me
             </label>
 
-            <a className="text-teal-600 hover:underline cursor-pointer">
-              Forgot password?
-            </a>
+            <Link href="/admin/forgot-password" className="text-black text-sm mt-4 block flex justify-center hover:underline hover:text-blue-600">Forgot Password?</Link>
+
 
           </div>
 

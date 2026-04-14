@@ -109,10 +109,10 @@ export default async function handler(req, res) {
       .populate("linkId")
       .sort({ createdAt: -1 })
       .lean();
-    
+
     const psychometricAssessments = psychometric.map((p) => {
 
-      
+
 
       return {
         _id: p._id,
@@ -150,7 +150,11 @@ export default async function handler(req, res) {
       ...psychometricAssessments,
       ...normalAssessments,
       ...pendingAssessments
-    ];
+    ].sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.startedAt || 0);
+      const dateB = new Date(b.createdAt || b.startedAt || 0);
+      return dateB - dateA;
+    });
 
     res.json({
       ok: true,

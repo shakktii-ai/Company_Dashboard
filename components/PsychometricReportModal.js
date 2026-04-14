@@ -22,7 +22,7 @@ export default function PsychometricReportModal({ resultId, onClose }) {
   const evaluation = data.results || {};
   const engineScores = evaluation.engine_scores || {};
 
-  // 🔥 SAME mapping as original page
+  //  SAME mapping as original page
   const competencyAreas = Object.entries(engineScores).map(([key, val]) => ({
     name: `Engine ${key}`,
     rawScore: val.score,
@@ -32,10 +32,10 @@ export default function PsychometricReportModal({ resultId, onClose }) {
   }));
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-2">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-md flex items-center justify-center z-50 p-2">
 
-      <div className="w-full max-w-5xl h-[85vh]  flex flex-col ">
-        {/* 🔥 EXACT SAME UI */}
+      <div className="w-full max-w-5xl h-[85vh] rounded-2xl shadow-md flex flex-col overflow-hidden">
+        {/*  EXACT SAME UI */}
         <div className="bg-white  flex flex-col h-full rounded-2xl">
 
           {/* Header */}
